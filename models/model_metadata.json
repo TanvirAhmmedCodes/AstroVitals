@@ -1,0 +1,15 @@
+{
+  "trained_at": "2026-09-18T05:24:43.186721",
+  "duration_seconds": 7.330089807510376,
+  "data_shape": [
+    55,
+    616
+  ],
+  "categories": [
+    "cardiovascular",
+    "sleep_behavioral",
+    "immune"
+  ],
+  "gpu_enabled": false,
+  "has_xgboost": true
+}

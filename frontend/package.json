@@ -1,0 +1,48 @@
+{
+  "name": "astrovitals-neuro-shield",
+  "author": "MD Tanvir Ahmmed (Team Orbitrix)",
+  "description": "AI-powered astronaut health guardian by Team Orbitrix for NASA Space Apps Challenge 2026",
+  "contributors": [
+    "Isharq Ahmmed <hardware>",
+    "Suvajit Kumar Arja <hardware>",
+    "Suborna Akter <documentation>",
+    "Fatima Jahan Hitu <videography>",
+    "Md. Afzal Hossain <testing>"
+  ],
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "oxlint",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^1.20.0",
+    "date-fns": "^4.4.0",
+    "firebase": "^12.19.0",
+    "framer-motion": "^13.4.0",
+    "howler": "^2.2.4",
+    "i18next": "^26.4.2",
+    "lucide-react": "^1.47.0",
+    "react": "^19.2.8",
+    "react-calendar-heatmap": "^1.10.0",
+    "react-dom": "^19.2.8",
+    "react-i18next": "^17.0.14",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.18.4",
+    "recharts": "^3.10.1",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "autoprefixer": "^10.6.1",
+    "oxlint": "^1.81.0",
+    "postcss": "^8.5.28",
+    "tailwindcss": "^3.4.19",
+    "vite": "^8.3.0"
+  }
+}

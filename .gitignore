@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+backend/venv/
+*.db
+*.sqlite3
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+.vite/
+
+# Env (secrets)
+.env
+.env.local
+.env.*.local
+frontend/.env
+backend/.env
+
+# Keep examples
+!.env.example
+!frontend/.env.example
+!backend/.env.example
+
+# API keys (individual files)
+api/nasa_api_key.txt
+api/gemini_api_key.txt
+api/*_key.txt
+!api/ll2_config.txt
+!api/open_notify.txt
+!api/nasa_api_key.txt.example
+!api/gemini_api_key.txt.example
+
+# Data (large)
+data/osdr_i4/
+*.zip
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Internal working documents
+HANDOFF.md
+AGENT_HANDOFF.md
+MASTER_PROMPT.md
+*.backup.md
+# Firebase Service Account (CRITICAL - never commit)
+backend/firebase-service-account.json
+backend/*-firebase-adminsdk-*.json
+backend/serviceAccountKey.json
+*-firebase-adminsdk-*.json

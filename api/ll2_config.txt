@@ -1,0 +1,54 @@
+LAUNCH LIBRARY 2 CONFIGURATION
+===============================
+
+Base URL Production:  https://ll.thespacedevs.com/2.3.0/
+Base URL Dev:         https://lldev.thespacedevs.com/2.3.0/
+
+API Key: NOT REQUIRED
+Rate Limit: 15 requests/hour production, 100 requests/hour dev
+
+Documentation: https://thespacedevs.com/llapi
+
+ENDPOINTS
+=========
+
+GET /launches/previous/      past launches
+GET /launches/upcoming/      future launches
+GET /launches/{id}/          launch detail
+GET /agencies/               space agencies
+GET /astronauts/             astronauts
+GET /events/                 space events
+
+Query params:
+  ?limit=N          number of results
+  ?offset=N         pagination
+  ?search=keyword   search
+
+PYTHON EXAMPLE
+==============
+
+import requests
+
+BASE = "https://lldev.thespacedevs.com/2.3.0/"
+
+def get_latest_launches(limit=5):
+    r = requests.get(f"{BASE}launches/previous/?limit={limit}")
+    return r.json()["results"]
+
+def get_next_launch():
+    r = requests.get(f"{BASE}launches/upcoming/?limit=1")
+    return r.json()["results"][0]
+
+for launch in get_latest_launches(5):
+    print(f"{launch['name']} - {launch['net']}")
+
+ASTROVITALS USAGE
+=================
+
+File: backend/services/spacex_service.py
+Purpose: Show mission context in dashboard
+
+Data used in:
+  - Dashboard sidebar: Next SpaceX Launch
+  - Mission timeline: Inspiration4 launch date
+  - Earth-benefit narrative: current space events

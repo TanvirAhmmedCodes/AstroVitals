@@ -1,0 +1,27 @@
+OPEN NOTIFY API CONFIGURATION
+==============================
+
+Base URL: http://api.open-notify.org
+API Key: NOT REQUIRED
+Rate Limit: Poll every 5 seconds maximum
+
+Endpoints:
+  GET /iss-now.json     -> ISS current position
+  GET /astros.json      -> People currently in space
+
+Documentation: http://open-notify.org/Open-Notify-API/
+Source Code: https://github.com/open-notify/Open-Notify-API
+
+ASTROVITALS USAGE
+=================
+
+File: backend/services/iss_tracker.py
+
+Purpose:
+  1. Get ISS position for radiation dose modulation
+  2. Detect South Atlantic Anomaly (10x dose rate)
+  3. Show current crew count in dashboard sidebar
+
+Radiation Model:
+  If ISS over SAA (lat -50..0, lon -90..40): dose_multiplier = 10.0
+  Otherwise: dose_multiplier = 1.0

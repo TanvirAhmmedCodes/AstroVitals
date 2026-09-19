@@ -1,0 +1,111 @@
+/* Ori AI Companion — Visual & Animation Styles
+   NASA Space Apps Challenge 2026 · Made by MD Tanvir Ahmmed · Team Orbitrix */
+
+@keyframes ori-bob {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes ori-blink {
+  0%, 88%, 94%, 100% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  91% {
+    transform: scaleY(0.08);
+    opacity: 0.3;
+  }
+}
+
+@keyframes ori-antenna-wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-14deg);
+  }
+  40% {
+    transform: rotate(12deg);
+  }
+  60% {
+    transform: rotate(-8deg);
+  }
+  80% {
+    transform: rotate(6deg);
+  }
+}
+
+@keyframes ori-mouth-speak {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 1;
+    filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.9));
+  }
+}
+
+@keyframes ori-glow-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.35)) drop-shadow(0 0 20px rgba(236, 72, 153, 0.15));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(0, 212, 255, 0.6)) drop-shadow(0 0 32px rgba(236, 72, 153, 0.3));
+  }
+}
+
+@keyframes ori-speaking-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 14px rgba(0, 212, 255, 0.6)) drop-shadow(0 0 30px rgba(236, 72, 153, 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 24px rgba(0, 212, 255, 0.95)) drop-shadow(0 0 45px rgba(236, 72, 153, 0.55));
+  }
+}
+
+@keyframes ori-fab-beacon {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.5), 0 0 20px rgba(0, 212, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(0, 212, 255, 0), 0 0 30px rgba(0, 212, 255, 0.6);
+  }
+}
+
+/* Helper utility classes */
+.ori-floating {
+  animation: ori-bob 2.2s ease-in-out infinite;
+}
+
+.ori-eyes-blink {
+  transform-origin: center;
+  animation: ori-blink 4.5s ease-in-out infinite;
+}
+
+.ori-antenna-wave {
+  transform-origin: bottom center;
+  animation: ori-antenna-wiggle 1.2s ease-in-out infinite;
+}
+
+.ori-mouth-speaking {
+  transform-origin: center;
+  animation: ori-mouth-speak 0.4s ease-in-out infinite;
+}
+
+.ori-aura-idle {
+  animation: ori-glow-pulse 3.5s ease-in-out infinite;
+}
+
+.ori-aura-speaking {
+  animation: ori-speaking-glow 1.2s ease-in-out infinite;
+}
+
+.ori-fab-pulse {
+  animation: ori-fab-beacon 8s infinite;
+}
