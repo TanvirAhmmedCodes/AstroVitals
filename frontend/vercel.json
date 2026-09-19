@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://astrovitals-backend.onrender.com/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://astrovitals.onrender.com/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "buildCommand": "npm run build",

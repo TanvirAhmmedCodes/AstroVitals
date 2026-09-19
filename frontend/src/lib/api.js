@@ -13,7 +13,7 @@ function resolveApiBase() {
       return 'http://localhost:8080/api/v1';
     }
     // Production on Vercel or custom domain: point directly to deployed Render backend
-    return 'https://astrovitals-backend.onrender.com/api/v1';
+    return 'https://astrovitals.onrender.com/api/v1';
   }
   return '/api/v1';
 }

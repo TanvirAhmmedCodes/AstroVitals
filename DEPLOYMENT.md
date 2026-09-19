@@ -10,7 +10,7 @@ AstroVitals is architected for decoupled cloud deployment:
 
 | Variable | Platform | Scope | Description | Sample / Default |
 |:---|:---|:---|:---|:---|
-| `VITE_API_BASE_URL` | Vercel (Frontend) | **Public** | URL to the deployed backend | `https://astrovitals-backend.onrender.com` |
+| `VITE_API_BASE_URL` | Vercel (Frontend) | **Public** | URL to the deployed backend | `https://astrovitals.onrender.com` |
 | `VITE_APP_NAME` | Vercel (Frontend) | **Public** | Brand application title | `AstroVitals` |
 | `VITE_AUTHOR` | Vercel (Frontend) | **Public** | Lead developer credit | `MD Tanvir Ahmmed` |
 | `GEMINI_API_KEY` | Render (Backend) | **Secret** | Google Gemini API Key for Ori | `AIzaSy...` (from Google AI Studio) |
@@ -54,7 +54,7 @@ The AstroVitals frontend is built with React 19 and Vite, styled with Tailwind C
    - **Output Directory**: `dist`
 4. Expand **Environment Variables** and add:
    ```text
-   VITE_API_BASE_URL = https://astrovitals-backend.onrender.com
+   VITE_API_BASE_URL = https://astrovitals.onrender.com
    VITE_APP_NAME = AstroVitals
    VITE_AUTHOR = MD Tanvir Ahmmed
 

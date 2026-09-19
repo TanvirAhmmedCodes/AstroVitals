@@ -447,7 +447,7 @@ Deploy **only** the `frontend/` directory to Vercel.
 
 **Required Environment Variables (Vercel Dashboard)**:
 ```env
-VITE_API_BASE_URL=https://astrovitals-backend.onrender.com
+VITE_API_BASE_URL=https://astrovitals.onrender.com
 VITE_FIREBASE_API_KEY=your_firebase_web_api_key
 VITE_FIREBASE_AUTH_DOMAIN=astrovitals.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=astrovitals
