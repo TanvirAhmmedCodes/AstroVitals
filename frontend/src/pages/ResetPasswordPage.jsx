@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { resetPassword } from '../lib/auth';
 import Starfield from '../components/cinematic/Starfield';
-import { Radio, Lock, ShieldAlert, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Radio, Lock, ShieldAlert, CheckCircle2, ArrowRight, AlertTriangle } from 'lucide-react';
 
 export default function ResetPasswordPage() {
-  const { token } = useParams();
+  const { token: paramToken } = useParams();
+  const [searchParams] = useSearchParams();
+  const token = paramToken || searchParams.get('token');
   const navigate = useNavigate();
 
   const [password, setPassword] = useState('');
@@ -17,6 +19,11 @@ export default function ResetPasswordPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+
+    if (!token) {
+      setError('Missing security reset token. Please request a new recovery link.');
+      return;
+    }
 
     if (password.length < 8) {
       setError('Access key must be at least 8 characters long.');
@@ -34,9 +41,10 @@ export default function ResetPasswordPage() {
       setSuccess(true);
       setTimeout(() => {
         navigate('/login');
-      }, 3000);
+      }, 2500);
     } catch (err) {
-      setError(err.message || 'Key reset failed. Token may be expired.');
+      const msg = err.response?.data?.detail || err.message || 'Key reset failed. Token may be expired.';
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -62,7 +70,26 @@ export default function ResetPasswordPage() {
       {/* Main Container */}
       <div className="my-auto max-w-md w-full mx-auto relative z-10 py-12">
         <div className="p-8 rounded-2xl bg-gradient-to-br from-[#0C1220]/90 to-[#070B14]/95 border border-white/10 backdrop-blur-xl shadow-2xl">
-          {!success ? (
+          {!token ? (
+            <div className="text-center py-4 space-y-4">
+              <div className="w-12 h-12 rounded-xl bg-[#F59E0B]/10 border border-[#F59E0B]/30 flex items-center justify-center mx-auto text-[#F59E0B]">
+                <AlertTriangle size={24} />
+              </div>
+              <h1 className="font-hud text-lg sm:text-xl font-bold tracking-wide text-white">
+                NO RESET TOKEN DETECTED
+              </h1>
+              <p className="text-xs font-mono text-[#A8B2C1] leading-relaxed">
+                The password recovery link may be expired or incomplete. Please request a new transmission.
+              </p>
+              <Link
+                to="/forgot-password"
+                className="inline-flex items-center gap-2 mt-4 px-6 py-2.5 rounded-lg bg-[#00D4FF]/20 text-[#00D4FF] border border-[#00D4FF]/40 font-mono text-xs uppercase tracking-wider hover:bg-[#00D4FF]/30 transition-colors"
+              >
+                <span>Request New Link</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          ) : !success ? (
             <>
               <div className="mb-6 text-center">
                 <div className="w-12 h-12 rounded-xl bg-[#00D4FF]/10 border border-[#00D4FF]/30 flex items-center justify-center mx-auto mb-4 text-[#00D4FF]">

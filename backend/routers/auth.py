@@ -309,9 +309,19 @@ def forgot_password(data: ForgotPasswordRequest, request: Request, db: Session =
         user.reset_token_expires = datetime.now(timezone.utc) + timedelta(hours=1)
         db.commit()
 
-        base_url = str(request.base_url).rstrip("/")
-        # If client originated from Vite dev port 5173, adjust link origin
-        origin = request.headers.get("origin") or "http://localhost:5173"
+        # Determine client origin: prioritize Origin header, referer, or default to production Vercel frontend
+        origin = request.headers.get("origin")
+        if not origin and request.headers.get("referer"):
+            from urllib.parse import urlparse
+            ref = urlparse(request.headers.get("referer"))
+            if ref.scheme and ref.netloc:
+                origin = f"{ref.scheme}://{ref.netloc}"
+
+        # If no client origin or caller is backend itself, default to production Vercel frontend
+        if not origin or "8080" in origin or "8000" in origin or "onrender.com" in origin:
+            origin = "https://astrovitals.vercel.app"
+
+        origin = origin.rstrip("/")
         reset_link = f"{origin}/reset-password/{token}"
         print(f"[AUTH:RESET-LINK] Password reset requested for {user.email}: {reset_link}")
         email_service.send_password_reset(user.email, reset_link)

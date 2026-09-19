@@ -127,19 +127,21 @@ class EmailService:
             return True
 
         try:
-            from_addr = settings.FROM_EMAIL
+            resend.api_key = settings.RESEND_API_KEY
+            from_addr = settings.FROM_EMAIL or "onboarding@resend.dev"
             # If using free onboarding Resend key without custom domain verified:
-            if "onboarding" not in from_addr and "@astrovitals.app" in from_addr:
+            if "onboarding" not in from_addr and ("@astrovitals.app" in from_addr or not from_addr):
                 from_addr = "onboarding@resend.dev"
 
             params: resend.Emails.SendParams = {
-                "from": f"AstroVitals Mission Control <{from_addr}>",
+                "from": f"AstroVitals <{from_addr}>",
                 "to": [to_email],
                 "subject": subject,
                 "html": html_content,
             }
-            resend.Emails.send(params)
-            print(f"[EmailService] Email sent successfully to {to_email} ({subject})")
+            resp = resend.Emails.send(params)
+            resp_id = resp.get("id") if isinstance(resp, dict) else getattr(resp, "id", resp)
+            print(f"[EmailService] Email sent successfully to {to_email} ({subject}) - ID: {resp_id}")
             return True
         except Exception as e:
             print(f"[EmailService] Failed to send email to {to_email}: {e}")
@@ -177,10 +179,15 @@ class EmailService:
         content = f"""
         <h2 style="color: #F8FAFC; margin-top: 0;">Security Key Reset Request</h2>
         <p>A password reset sequence was initiated for your AstroVitals mission account.</p>
-        <p style="text-align: center;">
-          <a href="{reset_link}" class="btn">Reset Access Key</a>
-        </p>
+        <p>Click the button below to redirect to the console terminal and configure your new security key:</p>
+        <div style="text-align: center; margin: 28px 0;">
+          <a href="{reset_link}" class="btn" style="background-color: #00D4FF; background: linear-gradient(135deg, #00D4FF 0%, #0B3D91 100%); color: #ffffff !important; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; text-transform: uppercase; letter-spacing: 0.08em;">Reset Access Key</a>
+        </div>
         <p style="color: #EF4444; font-size: 13px;">This emergency link expires in 60 minutes. If you did not request this, secure your account immediately.</p>
+        <p style="word-break: break-all; font-size: 12px; color: #64748B; margin-top: 24px; border-top: 1px solid #1E293B; padding-top: 14px;">
+          Direct recovery link (backup):<br/>
+          <a href="{reset_link}" style="color: #00D4FF; text-decoration: underline;">{reset_link}</a>
+        </p>
         """
         return cls._send(email, "AstroVitals Security Key Reset", _wrap_email_template("Password Reset", content))
 

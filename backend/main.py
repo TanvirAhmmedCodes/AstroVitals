@@ -103,7 +103,7 @@ app = FastAPI(
     description=(
         "Mission-grade astronaut health monitoring platform. "
         "Made by MD Tanvir Ahmmed and Team Orbitrix for NASA Space Apps Challenge 2026. "
-        "Team: MD Tanvir Ahmmed (Software, ML), Isharq Ahmmed & Suvajit Kumar Arja (Hardware), "
+        "Team: MD Tanvir Ahmmed (Software, ML), Ishraq Ahmmed & Suvajit Kumar Arja (Hardware), "
         "Suborna Akter & Fatima Jahan Hitu (Documentation & Videography), "
         "Md. Afzal Hossain (Testing)."
     ),
@@ -199,8 +199,9 @@ def model_metrics():
 if __name__ == "__main__":
     import uvicorn
 
+    app_target = "backend.main:app" if Path("backend").is_dir() else "main:app"
     uvicorn.run(
-        "backend.main:app",
+        app_target,
         host=settings.BACKEND_HOST,
         port=settings.BACKEND_PORT,
         reload=True,

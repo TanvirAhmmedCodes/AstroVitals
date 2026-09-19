@@ -30,7 +30,6 @@ AstroVitals is architected for decoupled cloud deployment:
 | `VITE_FIREBASE_API_KEY` | Vercel (Frontend) | **Public** | Firebase Web API Key | `AIzaSy...` |
 | `VITE_FIREBASE_AUTH_DOMAIN` | Vercel (Frontend) | **Public** | Firebase Auth domain | `astrovitals.firebaseapp.com` |
 | `VITE_FIREBASE_PROJECT_ID` | Vercel (Frontend) | **Public** | Firestore Project ID | `astrovitals` |
-| `VITE_FIREBASE_STORAGE_BUCKET`| Vercel (Frontend) | **Public** | Firebase bucket placeholder | `astrovitals.firebasestorage.app` |
 | `VITE_FIREBASE_MESSAGING_SENDER_ID`| Vercel (Frontend)| **Public**| Firebase messaging sender ID | `1049915567750` |
 | `VITE_FIREBASE_APP_ID` | Vercel (Frontend) | **Public** | Firebase Web application ID | `1:1049915567750:web:...` |
 | `VITE_FIREBASE_MEASUREMENT_ID` | Vercel (Frontend)| **Public** | Firebase Measurement / Analytics ID | `G-P69YXM6GYK` |
@@ -63,7 +62,6 @@ The AstroVitals frontend is built with React 19 and Vite, styled with Tailwind C
    VITE_FIREBASE_API_KEY = AIzaSyDrSuUCiBfHiamnG0ufAZrQKXHDp-r74jk
    VITE_FIREBASE_AUTH_DOMAIN = astrovitals.firebaseapp.com
    VITE_FIREBASE_PROJECT_ID = astrovitals
-   VITE_FIREBASE_STORAGE_BUCKET = astrovitals.firebasestorage.app
    VITE_FIREBASE_MESSAGING_SENDER_ID = 1049915567750
    VITE_FIREBASE_APP_ID = 1:1049915567750:web:dc01e36044e9669f71ab07
    VITE_FIREBASE_MEASUREMENT_ID = G-P69YXM6GYK

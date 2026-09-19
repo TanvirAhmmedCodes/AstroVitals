@@ -1,7 +1,7 @@
 # AstroVitals Neuro-Shield
 
 ### AI-Powered Astronaut Health Guardian
-**NASA Space Apps Challenge 2026** — Team Orbitrix, Dhaka, Bangladesh
+**NASA Space Apps Challenge 2026** - Team Orbitrix, Dhaka, Bangladesh
 
 > *"A wearable that reads the body. An AI that understands the mind."*
 
@@ -22,13 +22,13 @@ Long-duration spaceflight missions expose astronauts to deep space galactic cosm
 | Member | Role | Responsibility | Contact |
 |---|---|---|---|
 | **MD Tanvir Ahmmed** | **Team Lead · Full Stack · AI/ML** | Software, ML Models, API Architecture, UI/UX, Everything Code | [Email](mailto:tanvirahmmed13579@gmail.com) |
-| **Isharq Ahmmed** | **Hardware Engineer** | ESP32 Firmware, MAX30102, MLX90614, MPU6050 Sensors | — |
+| **Ishraq Ahmmed** | **Hardware Engineer** | ESP32 Firmware, MAX30102, MLX90614, MPU6050 Sensors | — |
 | **Suvajit Kumar Arja** | **Hardware Engineer** | PCB Schematic, Power Management, Circuit Assembly | — |
 | **Suborna Akter** | **Documentation Lead** | Technical Documentation, Research Papers, Compliance | — |
 | **Fatima Jahan Hitu** | **Videography & Storyboard** | Video Production, Storyboarding, Media Visuals | — |
 | **Md. Afzal Hossain** | **QA & System Testing** | System Testing, User Acceptance Testing, QA | — |
 
-**Event:** NASA Space Apps Challenge 2026 — Dhaka Local Event  
+**Event:** NASA Space Apps Challenge 2026 - Dhaka Local Event  
 **Made by MD Tanvir Ahmmed (Team Lead) · Team Orbitrix**
 
 ---
@@ -46,16 +46,16 @@ AstroVitals is a synchronized two-part spaceflight health system:
 - **Edge Telemetry Dispatch**: Transmits periodic JSON payload via Wi-Fi HTTP POST to `/api/v1/ingest/vitals`.
 
 ### 2. Web Application (Mission-Grade Cloud Console)
-- **Live Vitals Dashboard** — Real-time biometric streaming via Server-Sent Events (SSE) and Firebase Firestore.
-- **Risk & Countermeasure Panel** — Multi-system ML risk scoring (Cardiovascular, Sleep/Behavioral, Immune) with NASA HRP countermeasures.
-- **Health Trends Calendar** — Continuous GitHub-style heatmap displaying longitudinal autonomic stability and anomaly clusters.
-- **Neuro-Shield Cognitive Engine** — Visual reaction time testing (ms), ESA Concordia-calibrated mood survey, and composite cognitive indexing.
-- **Ori AI Health Companion** — Warm, personalized conversational assistant powered by Google Gemini (`gemini-3.5-flash-lite`) with live telemetry context injection.
-- **Multi-Crew Mission Control** — Fleet-wide grid tracking all 4 active astronauts, real-time alert logs, and South Atlantic Anomaly (SAA) warnings.
-- **Digital Twin Simulator** — Forward projection engine simulating 180-day mission health trajectories under adjustable countermeasure regimens.
-- **Earth-Side Family Portal** — Reassuring earth-side portal featuring wellness indices and bidirectional orbital heartbeat pings.
-- **Cinematic Medical Dossier** — Automated generator for publication-grade, printable multi-page PDF medical reports via ReportLab.
-- **Single-Admin Security Console** — Strict single-admin account governance (`tanvirahmmed13579@gmail.com`) with full user lifecycle controls.
+- **Live Vitals Dashboard** - Real-time biometric streaming via Server-Sent Events (SSE) and Firebase Firestore.
+- **Risk & Countermeasure Panel** - Multi-system ML risk scoring (Cardiovascular, Sleep/Behavioral, Immune) with NASA HRP countermeasures.
+- **Health Trends Calendar** - Continuous GitHub-style heatmap displaying longitudinal autonomic stability and anomaly clusters.
+- **Neuro-Shield Cognitive Engine** - Visual reaction time testing (ms), ESA Concordia-calibrated mood survey, and composite cognitive indexing.
+- **Ori AI Health Companion** - Warm, personalized conversational assistant powered by Google Gemini (`gemini-3.5-flash-lite`) with live telemetry context injection.
+- **Multi-Crew Mission Control** - Fleet-wide grid tracking all 4 active astronauts, real-time alert logs, and South Atlantic Anomaly (SAA) warnings.
+- **Digital Twin Simulator** - Forward projection engine simulating 180-day mission health trajectories under adjustable countermeasure regimens.
+- **Earth-Side Family Portal** - Reassuring earth-side portal featuring wellness indices and bidirectional orbital heartbeat pings.
+- **Cinematic Medical Dossier** - Automated generator for publication-grade, printable multi-page PDF medical reports via ReportLab.
+- **Single-Admin Security Console** - Strict single-admin account governance (`tanvirahmmed13579@gmail.com`) with full user lifecycle controls.
 
 ---
 
@@ -124,6 +124,7 @@ AstroVitals/
 ├── .gitignore                             # Ignores .env, *.db, venv, node_modules, secrets
 ├── .env.example                           # Root Environment Template
 ├── DEPLOYMENT.md                          # Full Production Deployment Guide (Vercel + Render)
+├── RENDER_ENVIRONMENT_VARIABLES.example.md # Render & Cloud Deployment Reference (Sanitized)
 ├── SECURITY.md                            # Comprehensive Security Policy & Admin Governance
 ├── AGENT_HANDOFF.md                       # Development Diagnostic & Bug Fix Record
 ├── MASTER_PROMPT.md                       # System Specification & Architecture Reference
@@ -218,13 +219,10 @@ AstroVitals/
 │   │   │
 │   │   ├── audios/                        # Audio Assets
 │   │   │   ├── space_sound.mp3            # Relaxing Ambient Space Soundscape (Loop)
-│   │   │   ├── warning_sound.mp3          # Emergency Beacon Alert Sound (Single-Shot)
-│   │   │   └── warning-sound.mp3          # Emergency Sound Asset Alias
+│   │   │   └── warning_sound.mp3          # Emergency Beacon Alert Sound (Single-Shot)
 │   │   │
 │   │   ├── images/                        # Branding & Logos
-│   │   │   ├── AstroVitals.png            # High-Resolution AstroVitals Emblem
 │   │   │   ├── astrovitals_logo.png       # AstroVitals Official Project Logo
-│   │   │   ├── Orbitrix.png               # High-Resolution Team Orbitrix Crest
 │   │   │   └── orbitrix_logo.png          # Team Orbitrix Circular Logo
 │   │   │
 │   │   └── videos/                        # NASA Public Domain Background Footage
@@ -453,7 +451,6 @@ VITE_API_BASE_URL=https://astrovitals-backend.onrender.com
 VITE_FIREBASE_API_KEY=your_firebase_web_api_key
 VITE_FIREBASE_AUTH_DOMAIN=astrovitals.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=astrovitals
-VITE_FIREBASE_STORAGE_BUCKET=astrovitals.firebasestorage.app
 VITE_FIREBASE_MESSAGING_SENDER_ID=1049915567750
 VITE_FIREBASE_APP_ID=your_firebase_app_id
 VITE_FIREBASE_MEASUREMENT_ID=G-P69YXM6GYK
@@ -475,7 +472,7 @@ VITE_FIREBASE_MEASUREMENT_ID=G-P69YXM6GYK
 Deploy the root repository or `backend/` directory as a **Web Service** on Render.
 
 - **Environment**: `Python 3`
-- **Build Command**: `pip install -r backend/requirements.txt`
+- **Build Command**: `pip install -r requirements.txt`
 - **Start Command**: `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
 - **Root Directory**: `.` (Repository root so that `models/` is accessible)
 
@@ -518,7 +515,7 @@ FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account","project_id":"astrovital
 
 ### Team Orbitrix (NASA Space Apps Challenge 2026 — Dhaka, Bangladesh)
 - **Software, ML Models, Full-Stack Architecture**: **MD Tanvir Ahmmed** (Team Lead)
-- **Hardware & Sensor Integration**: **Isharq Ahmmed**
+- **Hardware & Sensor Integration**: **Ishraq Ahmmed**
 - **Hardware & PCB Assembly**: **Suvajit Kumar Arja**
 - **Documentation Lead**: **Suborna Akter**
 - **Videography & Storyboarding**: **Fatima Jahan Hitu**
@@ -532,8 +529,8 @@ FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account","project_id":"astrovital
 
 ## 📄 License
 
-This project is licensed under the **MIT License** — see the [`LICENSE`](LICENSE) file for complete details.
+This project is licensed under the **MIT License** - see the [`LICENSE`](LICENSE) file for complete details.
 
 ---
 
-*AstroVitals Neuro-Shield — because the next frontier starts with a heartbeat.*
+*AstroVitals Neuro-Shield - because the next frontier starts with a heartbeat.*

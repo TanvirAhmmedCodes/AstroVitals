@@ -33,8 +33,22 @@ class ModelRegistry:
         self.load_models()
 
     def load_models(self):
-        """Load frozen artifacts from /models/ directory."""
+        """Load frozen artifacts from /models/ directory with multi-path fallback."""
         try:
+            # Fallback path resolution if default directory is missing artifacts
+            resolved_dir = self.models_dir
+            if not (resolved_dir / "anomaly_detector.pkl").exists():
+                for candidate in [
+                    Path(__file__).resolve().parent.parent / "models",  # backend/models
+                    Path(__file__).resolve().parent.parent.parent / "models",  # repo root/models
+                    Path.cwd() / "models",
+                    Path.cwd() / "backend" / "models",
+                ]:
+                    if (candidate / "anomaly_detector.pkl").exists():
+                        resolved_dir = candidate
+                        break
+            self.models_dir = resolved_dir
+
             cv_path = self.models_dir / "risk_model_cardiovascular.pkl"
             sleep_path = self.models_dir / "risk_model_sleep_behavioral.pkl"
             immune_path = self.models_dir / "risk_model_immune.pkl"

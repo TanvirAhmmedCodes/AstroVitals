@@ -712,7 +712,7 @@ export default function LandingPage() {
             </div>
             <div className="team-member-card p-5 rounded-xl bg-[#0C1220]/80 border border-white/10 hover:border-cyan-400/40 transition-all duration-300 text-left">
               <p className="font-mono text-xs uppercase tracking-wider text-cyan-300">Hardware</p>
-              <p className="font-display text-lg font-bold text-white mt-1">Isharq Ahmmed</p>
+              <p className="font-display text-lg font-bold text-white mt-1">Ishraq Ahmmed</p>
               <p className="text-xs text-[#94A3B8] mt-0.5">ESP32 · Sensor Integration</p>
             </div>
             <div className="team-member-card p-5 rounded-xl bg-[#0C1220]/80 border border-white/10 hover:border-cyan-400/40 transition-all duration-300 text-left">

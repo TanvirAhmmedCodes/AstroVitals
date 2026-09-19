@@ -44,13 +44,22 @@ data/osdr_i4/
 .DS_Store
 Thumbs.db
 
-# Internal working documents
+# Internal working documents & local deployment secrets
 HANDOFF.md
 AGENT_HANDOFF.md
 MASTER_PROMPT.md
 *.backup.md
-# Firebase Service Account (CRITICAL - never commit)
+*.secrets.md
+RENDER_ENVIRONMENT_VARIABLES.md
+!RENDER_ENVIRONMENT_VARIABLES.example.md
+
+# Firebase & Cloud Service Accounts (CRITICAL - never commit)
 backend/firebase-service-account.json
 backend/*-firebase-adminsdk-*.json
 backend/serviceAccountKey.json
 *-firebase-adminsdk-*.json
+credentials.json
+*.pem
+*.key
+
+
