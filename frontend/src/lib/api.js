@@ -1,8 +1,24 @@
 import axios from 'axios';
 
-// Read base URL from Vite environment, fallback to relative /api/v1 for Vercel/proxy
-const rawBase = import.meta.env.VITE_API_BASE_URL || '';
-const API_BASE = rawBase ? `${rawBase.replace(/\/$/, '')}/api/v1` : '/api/v1';
+// Resolve base URL: use Vite env, fallback to localhost in dev or Render in production
+const rawEnvBase = import.meta.env.VITE_API_BASE_URL;
+
+function resolveApiBase() {
+  if (rawEnvBase && rawEnvBase.trim()) {
+    return `${rawEnvBase.trim().replace(/\/$/, '')}/api/v1`;
+  }
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:8080/api/v1';
+    }
+    // Production on Vercel or custom domain: point directly to deployed Render backend
+    return 'https://astrovitals-backend.onrender.com/api/v1';
+  }
+  return '/api/v1';
+}
+
+export const API_BASE = resolveApiBase();
 
 export const apiClient = axios.create({
   baseURL: API_BASE,

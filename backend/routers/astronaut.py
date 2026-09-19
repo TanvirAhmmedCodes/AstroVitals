@@ -361,7 +361,7 @@ def get_astronaut_summary(astronaut_id: str, db: Session = Depends(get_db)):
 @router.get("/{astronaut_id}/report")
 def download_astronaut_medical_report(astronaut_id: str, db: Session = Depends(get_db)):
     """Generate and stream a cinematic PDF medical dossier for the astronaut."""
-    profile = db.query(AstronautProfile).filter(AstronautProfile.id == astronaut_id).first()
+    profile = _find_profile(astronaut_id, db)
     if not profile:
         raise HTTPException(status_code=404, detail=f"Astronaut '{astronaut_id}' not found")
 

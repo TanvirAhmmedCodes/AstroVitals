@@ -4,13 +4,13 @@ import { useAuthStore } from '../store/useAuthStore';
 import Starfield from '../components/cinematic/Starfield';
 import VideoBackground from '../components/cinematic/VideoBackground';
 import { VIDEOS } from '../config/videos';
-import { Radio, Lock, Mail, ShieldAlert, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Radio, Lock, Mail, ShieldAlert, ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
 import AmbientSoundToggle from '../components/cinematic/AmbientSoundToggle';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, loading } = useAuthStore();
+  const { login, loginDemo, loading } = useAuthStore();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,6 +21,15 @@ export default function LoginPage() {
   // Read destination from query param if available
   const params = new URLSearchParams(location.search);
   const redirectTarget = params.get('redirect') || '/dashboard';
+
+  const handleDemoAccess = (role = 'Commander') => {
+    loginDemo(role);
+    if (role === 'admin' && redirectTarget === '/dashboard') {
+      navigate('/admin');
+    } else {
+      navigate(redirectTarget);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,7 +44,20 @@ export default function LoginPage() {
         navigate(redirectTarget);
       }
     } catch (err) {
-      setError(err.message || 'Mission authentication failed. Check credentials.');
+      const msg = err.message || '';
+      const isOffline =
+        msg.includes('Network Error') ||
+        msg.includes('405') ||
+        msg.includes('404') ||
+        msg.includes('502') ||
+        msg.includes('503') ||
+        msg.includes('timeout') ||
+        (typeof window !== 'undefined' && !window.navigator.onLine);
+
+      setError({
+        text: err.message || 'Mission authentication failed. Check credentials.',
+        isOffline,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -130,9 +152,23 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="mb-6 p-4 rounded-lg bg-[#EF4444]/15 border border-[#EF4444]/40 text-[#FCA5A5] text-xs font-mono flex items-start gap-2.5">
-              <ShieldAlert size={16} className="text-[#EF4444] flex-shrink-0 mt-0.5" />
-              <span>{error}</span>
+            <div className="mb-6 p-4 rounded-lg bg-[#EF4444]/15 border border-[#EF4444]/40 text-[#FCA5A5] text-xs font-mono space-y-2.5">
+              <div className="flex items-start gap-2.5">
+                <ShieldAlert size={16} className="text-[#EF4444] flex-shrink-0 mt-0.5" />
+                <span>{typeof error === 'string' ? error : error.text}</span>
+              </div>
+              {typeof error === 'object' && error.isOffline && (
+                <div className="pt-2 border-t border-[#EF4444]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <span className="text-white/80 text-[11px]">Backend server is sleeping or warming up.</span>
+                  <button
+                    type="button"
+                    onClick={() => handleDemoAccess('Commander')}
+                    className="text-[#00D4FF] hover:underline font-hud font-bold text-xs uppercase tracking-wider inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Launch in Live Demo Mode →</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -209,6 +245,24 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          <div className="relative flex py-4 items-center">
+            <div className="flex-grow border-t border-white/10"></div>
+            <span className="flex-shrink mx-3 text-[10px] font-mono text-[#6B7688] uppercase tracking-wider">
+              EVALUATION & GUEST ACCESS
+            </span>
+            <div className="flex-grow border-t border-white/10"></div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handleDemoAccess('Commander')}
+            className="w-full py-3 px-4 rounded-lg bg-[#0C1220] hover:bg-[#121A2D] border border-[#00D4FF]/40 hover:border-[#00D4FF] text-[#00D4FF] font-hud text-xs uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(0,212,255,0.15)] hover:shadow-[0_0_30px_rgba(0,212,255,0.3)]"
+          >
+            <Sparkles size={15} className="text-[#00D4FF]" />
+            <span>EXPLORE LIVE DEMO CONSOLE</span>
+            <ArrowRight size={14} />
+          </button>
 
           <div className="mt-8 text-center pt-6 border-t border-white/10">
             <p className="text-xs text-[#A8B2C1] font-mono">

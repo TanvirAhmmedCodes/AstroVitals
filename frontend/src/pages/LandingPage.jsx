@@ -35,10 +35,17 @@ import {
   VolumeX,
 } from 'lucide-react';
 import AmbientSoundToggle from '../components/cinematic/AmbientSoundToggle';
+import { useAuthStore } from '../store/useAuthStore';
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { loginDemo } = useAuthStore();
   const [scrolled, setScrolled] = useState(false);
+
+  const handleLiveDemo = (target = '/dashboard') => {
+    loginDemo('Commander');
+    navigate(target);
+  };
   const [simHeartRate, setSimHeartRate] = useState(72.4);
   const [simSpO2, setSimSpO2] = useState(98.3);
   const [simTemp, setSimTemp] = useState(36.52);
@@ -112,6 +119,14 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => handleLiveDemo('/dashboard')}
+              className="px-3.5 py-1.5 rounded-lg border border-[#00D4FF]/40 hover:border-[#00D4FF] text-xs font-mono text-[#00D4FF] hover:bg-[#00D4FF]/10 transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <Sparkles size={13} />
+              <span>Live Demo</span>
+            </button>
             <Link
               to="/login"
               className="px-3.5 py-1.5 rounded-lg border border-white/10 hover:border-white/25 text-xs font-mono text-[#E8EDF5] hover:bg-white/5 transition-all"
@@ -207,13 +222,14 @@ export default function LandingPage() {
               <ArrowRight size={17} />
             </Link>
 
-            <Link
-              to="/login"
-              className="px-7 py-3.5 rounded-xl bg-[#0C1220]/80 hover:bg-[#121A2D] border border-white/15 hover:border-[#00D4FF]/40 text-[#E8EDF5] font-hud text-xs sm:text-sm tracking-wider uppercase transition-all duration-300 backdrop-blur-md flex items-center gap-2"
+            <button
+              type="button"
+              onClick={() => handleLiveDemo('/dashboard')}
+              className="px-7 py-3.5 rounded-xl bg-[#0C1220]/80 hover:bg-[#121A2D] border border-white/15 hover:border-[#00D4FF]/60 text-[#E8EDF5] font-hud text-xs sm:text-sm tracking-wider uppercase transition-all duration-300 backdrop-blur-md flex items-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(0,212,255,0.2)] hover:shadow-[0_0_30px_rgba(0,212,255,0.4)]"
             >
               <span>VIEW LIVE DEMO</span>
               <Sparkles size={16} className="text-[#00D4FF]" />
-            </Link>
+            </button>
           </motion.div>
         </div>
 
@@ -421,13 +437,14 @@ export default function LandingPage() {
                 REAL-TIME PHYSIOLOGICAL STREAM
               </h2>
             </div>
-            <Link
-              to="/vitals"
-              className="px-4 py-2 rounded-lg bg-[#00D4FF]/15 border border-[#00D4FF]/40 text-[#00D4FF] hover:bg-[#00D4FF]/25 font-mono text-xs uppercase tracking-wider transition-colors flex items-center gap-2"
+            <button
+              type="button"
+              onClick={() => handleLiveDemo('/vitals')}
+              className="px-4 py-2 rounded-lg bg-[#00D4FF]/15 border border-[#00D4FF]/40 text-[#00D4FF] hover:bg-[#00D4FF]/25 font-mono text-xs uppercase tracking-wider transition-colors flex items-center gap-2 cursor-pointer"
             >
               <span>Full Live Vitals Console</span>
               <ArrowRight size={14} />
-            </Link>
+            </button>
           </div>
 
           {/* 4 Interactive Live Tiles */}
