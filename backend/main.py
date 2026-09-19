@@ -6,7 +6,7 @@ Built by MD Tanvir Ahmmed and Team Orbitrix for NASA Space Apps Challenge 2026.
 
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -127,6 +127,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# HTTP HEAD method middleware for Render health checks and uptime probes
+@app.middleware("http")
+async def handle_head_method(request: Request, call_next):
+    if request.method == "HEAD":
+        request.scope["method"] = "GET"
+        response = await call_next(request)
+        return Response(
+            content=b"",
+            status_code=response.status_code,
+            headers=dict(response.headers),
+            media_type=response.media_type,
+        )
+    return await call_next(request)
+
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
@@ -158,7 +172,7 @@ app.include_router(external.router, prefix=settings.API_V1_STR)
 app.include_router(devices.router, prefix=settings.API_V1_STR)
 
 
-@app.get("/", tags=["System"])
+@app.api_route("/", methods=["GET", "HEAD"], tags=["System"])
 def root():
     return {
         "service": "AstroVitals Neuro-Shield API",
@@ -170,8 +184,8 @@ def root():
     }
 
 
-@app.get("/health", response_model=HealthCheckResponse, tags=["System"])
-@app.get(f"{settings.API_V1_STR}/health", response_model=HealthCheckResponse, tags=["System"])
+@app.api_route("/health", methods=["GET", "HEAD"], response_model=HealthCheckResponse, tags=["System"])
+@app.api_route(f"{settings.API_V1_STR}/health", methods=["GET", "HEAD"], response_model=HealthCheckResponse, tags=["System"])
 def health_check():
     return HealthCheckResponse(
         status="ok",
@@ -182,7 +196,7 @@ def health_check():
     )
 
 
-@app.get(f"{settings.API_V1_STR}/metrics", tags=["System"])
+@app.api_route(f"{settings.API_V1_STR}/metrics", methods=["GET", "HEAD"], tags=["System"])
 def model_metrics():
     """Returns honest validation metrics for judges and transparency disclosure."""
     return {
