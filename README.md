@@ -2,7 +2,10 @@
 
 ### Autonomous AI Health Guardian for Astronauts
 **NASA Space Apps Challenge 2026** - Challenge 5: Health Monitoring Software for Astronauts  
-**Team:** Team Orbitrix, Dhaka, Bangladesh
+**Team:** Team Orbitrix, Dhaka, Bangladesh  
+**Live Application:** [https://astrovitals.vercel.app](https://astrovitals.vercel.app)  
+**Production API:** [https://astrovitals.onrender.com](https://astrovitals.onrender.com)  
+**API Documentation (Swagger):** [https://astrovitals.onrender.com/docs](https://astrovitals.onrender.com/docs)  
 
 > "A wearable that reads the body. An AI that understands the mind."
 
@@ -146,10 +149,9 @@ The ESP32 firmware posts telemetry to `/api/v1/ingest/vitals`:
   ]
 }
 ```
-- Firmware Code: [`firmware/astrovitals_esp32.ino`](firmware/astrovitals_esp32.ino)
-- Hardware Specification: [`docs/HARDWARE.md`](docs/HARDWARE.md)
-- Hardware Documentation: [`docs/HARDWARE.md`](docs/HARDWARE.md)
-- Simulation Fallback: Run `python scripts/simulate_wearable.py --all-astronauts --rate 1` when physical hardware is not connected.
+- Firmware Source: [`firmware/astrovitals_esp32.ino`](firmware/astrovitals_esp32.ino)
+- Hardware Specification & Wiring: [`docs/HARDWARE.md`](docs/HARDWARE.md) (Single source of truth)
+- Telemetry Simulator: Run `python scripts/simulate_wearable.py --all-astronauts --rate 1` when physical hardware is absent.
 
 ---
 
@@ -264,7 +266,24 @@ python -m unittest discover backend/tests
 
 ---
 
-## 13. AI Attribution
+## 13. Comprehensive Documentation Index
+
+All technical, hardware, clinical, and architectural documentation is maintained in the [`docs/`](docs/) directory:
+
+- [`docs/HARDWARE.md`](docs/HARDWARE.md): Physical ESP32 schematic, sensor physics, I2C bus wiring, haptic circuit, and edge alert debouncing.
+- [`docs/MODEL_README.md`](docs/MODEL_README.md): Machine learning methodology, GroupKFold validation, model performance benchmark, and why regularized linear models beat tree ensembles on small N.
+- [`docs/DATASET_HARMONIZATION.md`](docs/DATASET_HARMONIZATION.md): Multi-cohort data pipeline harmonizing 36 subjects (299 longitudinal samples) across Inspiration4, Twin Study, HRP Bed Rest, and Concordia.
+- [`docs/ARCHITECTURE_AUDIT.md`](docs/ARCHITECTURE_AUDIT.md): Architectural spine analysis, layer boundary enforcement, and mathematical verification guarantees.
+- [`docs/AI_USE.md`](docs/AI_USE.md): Formal NASA Space Apps Challenge AI disclosure detailing development tools, in-app agent models, and human-engineered boundaries.
+- [`docs/HRP_REFERENCE.md`](docs/HRP_REFERENCE.md): NASA Human Research Program clinical risk countermeasure protocols and evidence base.
+- [`docs/REPO_AUDIT.md`](docs/REPO_AUDIT.md): Repository data provenance audit, synthetic data boundary isolation, and secret isolation verification.
+- [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md): Local environment setup, test workflows, and contribution standards.
+- [`docs/FIREBASE_ARCHITECTURE.md`](docs/FIREBASE_ARCHITECTURE.md): Real-time synchronization, Firestore schema, and authentication architecture.
+- [`docs/RADIATION_LIMITS.md`](docs/RADIATION_LIMITS.md): NASA-STD-3001 career and acute radiation limits and solar particle event threshold calculations.
+
+---
+
+## 14. AI Attribution
 
 In compliance with NASA Space Apps Challenge submission rules, all AI tools utilized during development are disclosed in [`docs/AI_USE.md`](docs/AI_USE.md):
 - **Development Tool**: Google Antigravity IDE (powered by Gemini reasoning models) assisted with code scaffolding, test generation, and documentation.
@@ -273,13 +292,13 @@ In compliance with NASA Space Apps Challenge submission rules, all AI tools util
 
 ---
 
-## 14. License
+## 15. License
 
 This project is licensed under the **Apache License 2.0** - see the [`LICENSE`](LICENSE) file for complete details.
 
 ---
 
-## 15. Team Orbitrix
+## 16. Team Orbitrix
 
 | Member | Role | Responsibility | Contact |
 |---|---|---|---|

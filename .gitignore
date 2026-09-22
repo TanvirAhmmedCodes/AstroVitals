@@ -9,6 +9,15 @@ backend/venv/
 *.db.bak
 *.sqlite3
 *.log
+.pytest_cache/
+.coverage
+htmlcov/
+*.swp
+*.swo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+desktop.ini
 
 # Scratch, temporary and backups
 scratch/
