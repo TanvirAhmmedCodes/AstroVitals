@@ -87,7 +87,7 @@ The AstroVitals backend runs FastAPI on Python 3.11+ with frozen scikit-learn an
 
 1. Log in to [Render](https://render.com).
 2. Go to **Blueprints** $\rightarrow$ **New Blueprint Instance**.
-3. Connect your repository and point to [`backend/render.yaml`](file:///e:/Nasa%20Space%20Apps%20Resources/AstroVitals/backend/render.yaml).
+3. Connect your repository (Render automatically detects root [`render.yaml`](file:///e:/Nasa%20Space%20Apps%20Resources/AstroVitals/render.yaml)).
 4. Fill in the prompted secret values (`GEMINI_API_KEY`, `NASA_API_KEY`, `RESEND_API_KEY`, `FIREBASE_SERVICE_ACCOUNT_JSON`).
 5. Click **Apply**.
 

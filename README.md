@@ -279,7 +279,8 @@ All technical, hardware, clinical, and architectural documentation is maintained
 - [`docs/REPO_AUDIT.md`](docs/REPO_AUDIT.md): Repository data provenance audit, synthetic data boundary isolation, and secret isolation verification.
 - [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md): Local environment setup, test workflows, and contribution standards.
 - [`docs/FIREBASE_ARCHITECTURE.md`](docs/FIREBASE_ARCHITECTURE.md): Real-time synchronization, Firestore schema, and authentication architecture.
-- [`docs/RADIATION_LIMITS.md`](docs/RADIATION_LIMITS.md): NASA-STD-3001 career and acute radiation limits and solar particle event threshold calculations.
+- [`docs/CONSOLIDATION_AUDIT.md`](docs/CONSOLIDATION_AUDIT.md): Repository audit matrix of consolidated files, deduplicated scripts, and single-source documentation.
+- [`backend/compute/radiation_math.py`](backend/compute/radiation_math.py) & [`docs/HRP_REFERENCE.md`](docs/HRP_REFERENCE.md): NASA-STD-3001 career and acute radiation limits, SAA coordinates, and countermeasure protocols.
 
 ---
 

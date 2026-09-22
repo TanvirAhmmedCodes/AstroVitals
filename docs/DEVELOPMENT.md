@@ -51,13 +51,12 @@ AstroVitals/
 │   ├── services/             # Core engines (auth, email, models, radiation, sse)
 │   ├── schemas.py            # Pydantic data validation schemas
 │   ├── Procfile              # Production process runner
-│   ├── render.yaml           # Render deployment configuration
 │   └── requirements.txt      # Backend Python dependencies
 ├── docs/                     # Technical, medical, and development documentation
 │   ├── DEVELOPMENT.md        # This development guide
 │   ├── HRP_REFERENCE.md      # NASA Human Research Program 5 hazards reference
 │   ├── MODEL_README.md       # Honest scientific model disclosure
-│   └── RADIATION_LIMITS.md   # NASA-STD-3001 radiological guidelines
+│   └── CONSOLIDATION_AUDIT.md # Repository consolidation audit matrix
 ├── frontend/                 # React 19 + Vite Application
 │   ├── public/               # Static assets, web manifest, icons
 │   ├── src/

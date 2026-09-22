@@ -147,14 +147,14 @@ AstroVitals will not be rebuilt from scratch. It is upgraded by establishing phy
   - Create `docs/HARDWARE.md` and update `README.md` with complete wiring, power budget, and sensor physics.
 
 ### Layer 9: Governance and Submission Files
-- PDF Specification: Apache-2.0 license, coding agent instructions (`AGENT.md`, `AGENTS.md`), AI use disclosure (`docs/AI_USE.md`), and judging checklist alignment.
+- PDF Specification: Apache-2.0 license, coding agent instructions (`AGENTS.md`), AI use disclosure (`docs/AI_USE.md`), and judging checklist alignment.
 - AstroVitals Status: PARTIALLY PRESENT.
 - Current Implementation:
   - MIT License in root.
   - No agent governance files.
 - Planned Upgrade:
   - Update `LICENSE` to Apache-2.0.
-  - Create `AGENT.md` and `AGENTS.md`.
+  - Create `AGENTS.md` (consolidating project non-negotiables and agent boundaries).
   - Create `docs/AI_USE.md` documenting Antigravity, model family, prompts, and team human engineering.
   - Map each NASA judging criterion in `README.md` with one clear sentence.
 
@@ -169,11 +169,11 @@ AstroVitals will not be rebuilt from scratch. It is upgraded by establishing phy
 4. Harmonized multi-subject training pipeline with subject-level splitting (`GroupKFold`).
 5. Standalone MCP server `mcp_server.py` and agent state machine orchestrator.
 6. ESP32 Arduino firmware `firmware/astrovitals_esp32.ino` and hardware guide `docs/HARDWARE.md`.
-7. Governance rulebooks (`AGENT.md`, `AGENTS.md`), AI disclosure (`docs/AI_USE.md`), and Apache-2.0 license.
+7. Governance rulebook (`AGENTS.md`), AI disclosure (`docs/AI_USE.md`), and Apache-2.0 license.
 8. Complete removal of all em-dashes and en-dashes across the repository.
 
 ### What We Will Leave Alone
-1. Deployment configurations: `Procfile`, `render.yaml`, `backend/render.yaml`, `vercel.json`, `frontend/vercel.json`, `vite.config.js` build rules, and `package.json` scripts remain completely intact.
+1. Deployment configurations: `Procfile`, `render.yaml`, `frontend/vercel.json`, `vite.config.js` build rules, and `package.json` scripts remain completely intact.
 2. Core backend architecture: The 13 existing FastAPI routers remain active and functional; new features plug cleanly into existing services.
 3. Core frontend visual design: The cinematic space UI, navigation, PWA service worker, audio design, and page layouts are preserved and enhanced with provenance drawers.
 4. Database schema: SQLite database model integrity is maintained for backwards compatibility.
