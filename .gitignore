@@ -72,6 +72,7 @@ data/osdr_i4/
 Thumbs.db
 
 # Internal working documents & local deployment secrets
+SETUP_PRIVATE.md
 HANDOFF.md
 AGENT_HANDOFF.md
 MASTER_PROMPT.md
