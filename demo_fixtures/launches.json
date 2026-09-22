@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Crew-10 Dragon / Falcon 9",
+    "net": "2026-11-15T14:30:00Z",
+    "status": {
+      "name": "Go for Launch"
+    },
+    "mission": {
+      "description": "NASA Commercial Crew Program expedition to the International Space Station."
+    },
+    "pad": {
+      "name": "Launch Complex 39A, Kennedy Space Center"
+    },
+    "provenance": {
+      "dataset_id": "LAUNCH-LIBRARY-2-CREW10",
+      "source_url": "https://ll.thespacedevs.com/2.2.0/launch/upcoming/",
+      "data_mode": "fixture"
+    }
+  }
+]

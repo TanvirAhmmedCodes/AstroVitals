@@ -257,7 +257,7 @@ export default function LandingPage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* SECTION 2: MISSION BRIEFING — NASA HRP 5 HAZARDS */}
+      {/* SECTION 2: MISSION BRIEFING - NASA HRP 5 HAZARDS */}
       {/* ========================================================================= */}
       <section id="briefing" className="py-24 px-4 sm:px-6 max-w-7xl mx-auto relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
@@ -670,30 +670,30 @@ export default function LandingPage() {
             <div className="p-5 rounded-xl bg-white/5 border border-white/10 space-y-2">
               <div className="flex justify-between items-center text-xs font-mono">
                 <span className="text-[#A8B2C1] uppercase">Cardiovascular Model</span>
-                <span className="text-[#EF4444] font-bold">R² = -0.43</span>
+                <span className="text-[#10B981] font-bold">R² = 0.67</span>
               </div>
               <p className="text-xs text-[#94A3B8] font-mono leading-relaxed">
-                Ensemble of XGBoost, GradientBoosting, and RandomForest trained on Inspiration4 CBC profiles. Negative $R^2$ honestly represents small cohort sample size ($N=28$).
+                BayesianRidge regularized model evaluated via 5-fold GroupKFold across 36 subjects (299 samples; OSD-569/575, OSD-294, OSD-379, Concordia). MAE = 5.34 points.
               </p>
             </div>
 
             <div className="p-5 rounded-xl bg-white/5 border border-white/10 space-y-2">
               <div className="flex justify-between items-center text-xs font-mono">
                 <span className="text-[#A8B2C1] uppercase">Sleep / Behavioral Model</span>
-                <span className="text-[#EF4444] font-bold">R² = -0.35</span>
+                <span className="text-[#10B981] font-bold">R² = 0.58</span>
               </div>
               <p className="text-xs text-[#94A3B8] font-mono leading-relaxed">
-                Calibrated on circadian rhythm misalignment and autonomic tone variance. Mean Absolute Error: 24.9 points on a 100-point deconditioning scale.
+                VotingRegressor regularized ensemble on circadian misalignment and polar analog isolation. Mean Absolute Error: 6.49 points on a 100-point scale.
               </p>
             </div>
 
             <div className="p-5 rounded-xl bg-white/5 border border-white/10 space-y-2">
               <div className="flex justify-between items-center text-xs font-mono">
                 <span className="text-[#A8B2C1] uppercase">Real-Time Anomaly Detector</span>
-                <span className="text-[#10B981] font-bold">PRIMARY SIGNAL</span>
+                <span className="text-[#00D4FF] font-bold">PRIMARY SENTINEL</span>
               </div>
               <p className="text-xs text-[#94A3B8] font-mono leading-relaxed">
-                IsolationForest serves as the frontline alert mechanism, triggering instant caution banners when acute physiological deviation exceeds 3 MAD from baseline.
+                IsolationForest serves as the frontline alert mechanism, triggering instant caution banners when acute physiological deviation exceeds baseline envelope.
               </p>
             </div>
           </div>

@@ -1,4 +1,4 @@
-"""AstroVitals Neuro-Shield — Firebase Admin Service.
+"""AstroVitals Neuro-Shield - Firebase Admin Service.
 
 Manages real-time Firestore synchronization for user accounts,
 device telemetry, and mission crew state.
@@ -62,7 +62,7 @@ def init_firebase() -> bool:
                         logger.warning(f"[Firebase] Could not read {file_path}: {fe}")
 
         if not service_account_info:
-            logger.warning("[Firebase] No credentials found — Firebase sync disabled (graceful fallback)")
+            logger.warning("[Firebase] No credentials found - Firebase sync disabled (graceful fallback)")
             return False
 
         cred = credentials.Certificate(service_account_info)

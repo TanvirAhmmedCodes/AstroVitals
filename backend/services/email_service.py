@@ -1,4 +1,4 @@
-"""AstroVitals Neuro-Shield — Transactional Email Service.
+"""AstroVitals Neuro-Shield - Transactional Email Service.
 
 Dispatches mission-grade, dark-themed HTML notifications using Resend API
 with graceful console fallback for local environments.
@@ -7,14 +7,20 @@ Made by MD Tanvir Ahmmed · Team Orbitrix · NASA Space Apps Challenge 2026
 """
 
 from typing import Optional, Dict, Any
-import resend
+
+try:
+    import resend
+    HAS_RESEND = True
+except ImportError:
+    resend = None
+    HAS_RESEND = False
 
 try:
     from config import settings
 except ImportError:
     from backend.config import settings
 
-if settings.RESEND_API_KEY:
+if HAS_RESEND and settings.RESEND_API_KEY and resend:
     resend.api_key = settings.RESEND_API_KEY
 
 

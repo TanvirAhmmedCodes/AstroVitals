@@ -174,9 +174,9 @@ class PDFReportService:
 
         risk_rows = [
             risk_headers,
-            ["Cardiovascular", f"{cv_s:.1f} / 100", "CAUTION" if cv_s > 35 else "NOMINAL", "Ensemble (XGB+GBR+RF)", "R² = -0.43 (Honest)", "NASA OSDR OSD-569"],
-            ["Sleep & Circadian", f"{sl_s:.1f} / 100", "CAUTION" if sl_s > 35 else "NOMINAL", "Ensemble (XGB+GBR+RF)", "R² = -0.35 (Honest)", "NASA HRP Sleep Protocol"],
-            ["Immune Function", f"{im_s:.1f} / 100", "CAUTION" if im_s > 35 else "NOMINAL", "Ensemble (XGB+GBR+RF)", "R² = -0.17 (Honest)", "NASA OSDR OSD-575"],
+            ["Cardiovascular", f"{cv_s:.1f} / 100", "CAUTION" if cv_s > 35 else "NOMINAL", "BayesianRidge", "R² = 0.673 (GroupKFold)", "NASA OSDR OSD-569/575"],
+            ["Sleep & Circadian", f"{sl_s:.1f} / 100", "CAUTION" if sl_s > 35 else "NOMINAL", "VotingRegressor", "R² = 0.577 (GroupKFold)", "NASA HRP / Concordia"],
+            ["Immune Function", f"{im_s:.1f} / 100", "CAUTION" if im_s > 35 else "NOMINAL", "BayesianRidge", "R² = 0.670 (GroupKFold)", "NASA OSDR OSD-570/575"],
             ["Cognitive Resilience", f"{cg_s:.1f} / 100", "NOMINAL", "ESA COGNISPACE Norms", "Empirical Norms", "ESA COGNISPACE"],
         ]
         risk_table = Table(risk_rows, colWidths=[110, 75, 75, 120, 85, 75])

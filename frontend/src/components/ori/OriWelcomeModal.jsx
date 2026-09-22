@@ -5,7 +5,7 @@ import OriAvatar from './OriAvatar';
 import { X, Sparkles, MessageSquare } from 'lucide-react';
 
 /**
- * OriWelcomeModal — First-visit onboarding sequence for newly registered crew.
+ * OriWelcomeModal - First-visit onboarding sequence for newly registered crew.
  *
  * Slides in from bottom-right, speaks welcome greeting, antenna waves,
  * and seamlessly minimizes to the floating action button.
@@ -67,7 +67,7 @@ export default function OriWelcomeModal() {
               <div className="flex-1 space-y-2">
                 <p className="text-xs sm:text-sm font-display text-[#CBD5E1] leading-relaxed">
                   Hi <strong className="text-[#00D4FF] font-semibold">{welcomeData.firstName}</strong>! I'm{' '}
-                  <strong className="text-white font-semibold">Ori</strong> — your mission companion. Welcome aboard AstroVitals. I'll be right here whenever you need me.
+                  <strong className="text-white font-semibold">Ori</strong> - your mission companion. Welcome aboard AstroVitals. I'll be right here whenever you need me.
                 </p>
                 <p className="text-[11px] font-mono text-[#94A3B8]">
                   Tap the button below or the floating orb anytime to talk.

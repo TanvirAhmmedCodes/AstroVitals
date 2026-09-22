@@ -31,6 +31,7 @@ class TelemetryIngestResponse(BaseModel):
     latest_heart_rate: Optional[float] = None
     latest_spo2: Optional[float] = None
     latest_radiation_uSv: Optional[float] = None
+    advisory_alert: Optional[str] = None
     timestamp: datetime
 
 
@@ -50,6 +51,7 @@ class VitalsLatestResponse(BaseModel):
     temp_delta_c: float = 0.0
     status: str = "nominal"  # nominal, caution, warning, critical
     is_anomaly: bool = False
+    provenance: Optional[Dict[str, Any]] = None
 
 
 class VitalsHistoryItem(BaseModel):
@@ -68,6 +70,7 @@ class VitalsHistoryResponse(BaseModel):
     time_window: str
     total_records: int
     data: List[VitalsHistoryItem]
+    provenance: Optional[Dict[str, Any]] = None
 
 
 class RiskCategoryDetail(BaseModel):
@@ -78,6 +81,7 @@ class RiskCategoryDetail(BaseModel):
     countermeasure: str
     r2_disclosure: Optional[float] = None
     model_type: str = "Ensemble Regressor (XGB + GBR + RF)"
+    provenance: Optional[Dict[str, Any]] = None
 
 
 class RiskCurrentResponse(BaseModel):
@@ -92,10 +96,12 @@ class RiskCurrentResponse(BaseModel):
     cognitive: RiskCategoryDetail
     radiation: RiskCategoryDetail
     anomaly_flag: bool
+    provenance: Optional[Dict[str, Any]] = None
     honesty_disclosure: str = (
         "AstroVitals uses wearable sensors as proxy indicators, trained against real clinical "
-        "outcomes from NASA's open datasets. Risk models have negative R² by design (28 unique subjects "
-        "in Inspiration4). We choose honesty over inflated metrics. Always consult flight surgeons for medical decisions."
+        "outcomes from NASA open datasets across 36 subjects (OSD-569, OSD-294, OSD-379, ESA Concordia). "
+        "Cross-validated R^2 scores under GroupKFold (Cardiovascular: 0.673, Sleep: 0.577, Immune: 0.670) "
+        "reflect honest generalization without subject leakage. Always consult flight surgeons for medical decisions."
     )
 
 
@@ -113,6 +119,10 @@ class RadiationStatusResponse(BaseModel):
     radiation_multiplier: float
     projected_days_to_limit: float
     status: str  # nominal, caution, warning, critical
+    data_source: str = "LIVE NOAA"  # LIVE NOAA, CACHE, FIXTURE, or SIMULATED
+    solar_flux_class: Optional[str] = "B1.2"
+    noaa_storm_scale: Optional[str] = "S0"
+    provenance: Optional[Dict[str, Any]] = None
 
 
 class AstronautProfileSchema(BaseModel):

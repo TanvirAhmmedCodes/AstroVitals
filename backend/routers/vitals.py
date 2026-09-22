@@ -1,6 +1,8 @@
+import os
+import asyncio
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from sse_starlette.sse import EventSourceResponse
 
@@ -38,6 +40,13 @@ def get_latest_vitals(
     if not record:
         # Default nominal state when mission begins or before wearable connects
         now = datetime.now(timezone.utc)
+        default_prov = {
+            "dataset_id": "NASA-STD-3001-VOL-1",
+            "source_url": "https://www.nasa.gov/hhp/standards/",
+            "data_mode": "fixture" if os.getenv("OFFLINE", "0").strip() == "1" else "live",
+            "timestamp_utc": now.isoformat(),
+            "raw_tool_json": {"status": "nominal", "note": "Pre-mission nominal baseline"},
+        }
         return VitalsLatestResponse(
             astronaut_id=astronaut_id,
             timestamp_utc=now,
@@ -54,6 +63,7 @@ def get_latest_vitals(
             temp_delta_c=0.0,
             status="nominal",
             is_anomaly=False,
+            provenance=default_prov,
         )
 
     hr = record.heart_rate_bpm or BASELINE_HR
@@ -88,6 +98,20 @@ def get_latest_vitals(
         abs((record.accel_x_g or 0.0) ** 2 + (record.accel_y_g or 0.0) ** 2 + ((record.accel_z_g or 1.0) - 1.0) ** 2) ** 0.5,
         3,
     )
+    mode = "fixture" if (os.getenv("OFFLINE", "0").strip() == "1" or not record) else "live"
+    prov = {
+        "dataset_id": "NASA-OSD-575-TELEMETRY",
+        "source_url": "https://osdr.nasa.gov/osdr/data/osd/files/575",
+        "data_mode": mode,
+        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        "raw_tool_json": {
+            "heart_rate_bpm": hr,
+            "spo2_pct": spo2,
+            "skin_temp_c": temp,
+            "is_anomaly": is_anomaly,
+            "status": status,
+        },
+    }
 
     return VitalsLatestResponse(
         astronaut_id=astronaut_id,
@@ -105,6 +129,7 @@ def get_latest_vitals(
         temp_delta_c=temp_delta,
         status=status,
         is_anomaly=is_anomaly,
+        provenance=prov,
     )
 
 
@@ -112,10 +137,46 @@ def get_latest_vitals(
 async def live_vitals_stream(
     request: Request,
     astronaut_id: str = Query("astronaut-A", description="Astronaut identifier to subscribe to"),
+    replay: bool = Query(False, description="Force demo fixture replay stream"),
 ):
     """Server-Sent Events (SSE) stream pushing real-time telemetry updates to mission console."""
-    generator = sse_manager.event_generator(astronaut_id)
+    generator = sse_manager.event_generator(astronaut_id=astronaut_id, replay=replay)
     return EventSourceResponse(generator)
+
+
+@router.websocket("/stream")
+async def websocket_vitals_stream(
+    ws: WebSocket,
+    astronaut_id: str = "astronaut-A",
+):
+    """WebSocket stream feeding real-time telemetry from replayed committed fixture or live queue."""
+    await ws.accept()
+    frames = sse_manager.get_fixture_frames()
+    if not frames:
+        frames = [
+            {
+                "heart_rate_bpm": 72.0,
+                "spo2_pct": 98.0,
+                "skin_temp_c": 36.5,
+                "motion_g": 0.04,
+                "status": "nominal",
+                "is_anomaly": False,
+                "rule_fired": "NONE",
+            }
+        ]
+    idx = 0
+    try:
+        while True:
+            frame = dict(frames[idx % len(frames)])
+            frame["astronaut_id"] = astronaut_id
+            frame["timestamp_utc"] = datetime.now(timezone.utc).isoformat()
+            await ws.send_json(frame)
+            idx += 1
+            await asyncio.sleep(1.0)
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        pass
 
 
 @router.get("/history", response_model=VitalsHistoryResponse)

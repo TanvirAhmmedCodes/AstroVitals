@@ -4,7 +4,7 @@ import OriAvatar from './OriAvatar';
 import './OriStyles.css';
 
 /**
- * OriButton — Global Floating Action Button (FAB)
+ * OriButton - Global Floating Action Button (FAB)
  *
  * Appears on every authenticated view in the bottom-right corner.
  * Clicking toggles the slide-in Ori Chat Drawer.

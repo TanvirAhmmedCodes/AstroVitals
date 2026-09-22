@@ -1,5 +1,5 @@
 /**
- * AstroVitals Neuro-Shield — Firebase Web Client SDK.
+ * AstroVitals Neuro-Shield - Firebase Web Client SDK.
  *
  * Provides real-time synchronization with Cloud Firestore and
  * optional Firebase Analytics in production environments.
@@ -46,7 +46,7 @@ try {
 
     console.info("[Firebase] Real-time client initialized successfully (Project: " + firebaseConfig.projectId + ")");
   } else {
-    console.warn("[Firebase] Missing VITE_FIREBASE_* credentials — operating in offline/REST mode");
+    console.warn("[Firebase] Missing VITE_FIREBASE_* credentials - operating in offline/REST mode");
   }
 } catch (error) {
   console.warn("[Firebase] Client initialization failed (graceful fallback):", error?.message || error);

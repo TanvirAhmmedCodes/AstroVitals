@@ -130,7 +130,7 @@ export function OriProvider({ children }) {
       }
 
       const firstName = u.full_name?.split(' ')[0] || 'Explorer';
-      const greeting = `Hi ${firstName}! I'm Ori — your mission companion. Welcome aboard AstroVitals. I'll be right here whenever you need me. Tap the button to chat.`;
+      const greeting = `Hi ${firstName}! I'm Ori - your mission companion. Welcome aboard AstroVitals. I'll be right here whenever you need me. Tap the button to chat.`;
 
       setWelcomeData({
         firstName,

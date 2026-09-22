@@ -3,7 +3,7 @@ class AmbientSoundPlayer {
   constructor() {
     this.audio = null;
     this.isPlaying = false;
-    this.volume = 0.15; // Low volume — relaxing, not distracting
+    this.volume = 0.15; // Low volume - relaxing, not distracting
     this.initialized = false;
   }
 

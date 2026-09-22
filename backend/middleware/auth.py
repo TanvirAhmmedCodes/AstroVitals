@@ -1,4 +1,4 @@
-"""AstroVitals Neuro-Shield — Authentication & Role Middleware.
+"""AstroVitals Neuro-Shield - Authentication & Role Middleware.
 
 Enforces JWT bearer authentication and restricts admin endpoints
 exclusively to MD Tanvir Ahmmed (tanvirahmmed13579@gmail.com).

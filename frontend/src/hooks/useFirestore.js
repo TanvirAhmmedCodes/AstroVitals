@@ -1,5 +1,5 @@
 /**
- * AstroVitals Neuro-Shield — Firestore Real-Time React Hooks.
+ * AstroVitals Neuro-Shield - Firestore Real-Time React Hooks.
  *
  * Real-time reactive subscriptions for wearable telemetry streams,
  * hardware device status, and live mission crew updates.

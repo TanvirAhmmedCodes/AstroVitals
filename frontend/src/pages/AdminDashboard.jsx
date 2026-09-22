@@ -697,7 +697,7 @@ export default function AdminDashboard() {
                           <div
                             key={h}
                             className={`h-4 rounded-xs ${bgClass} hover:ring-1 hover:ring-white transition-all cursor-pointer`}
-                            title={`${day} ${h.toString().padStart(2, '0')}:00 UTC — Intensity: ${intensity}%`}
+                            title={`${day} ${h.toString().padStart(2, '0')}:00 UTC - Intensity: ${intensity}%`}
                           />
                         );
                       })}

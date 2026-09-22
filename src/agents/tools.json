@@ -1,0 +1,106 @@
+[
+  {
+    "name": "vitals_anomaly_check",
+    "description": "Deterministic physiological safety envelope and IsolationForest anomaly test against astronaut baseline. Zero model arithmetic.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "heart_rate": {
+          "type": "number",
+          "description": "Heart rate in beats per minute (BPM), nominal range 50-95."
+        },
+        "spo2": {
+          "type": "number",
+          "description": "Blood oxygen saturation percentage (SpO2), nominal > 95%."
+        },
+        "skin_temp": {
+          "type": "number",
+          "description": "Skin temperature in degrees Celsius, nominal 35.5-37.5 C."
+        },
+        "motion_g": {
+          "type": "number",
+          "description": "Microgravity accelerometer magnitude in g, default 0.04."
+        }
+      },
+      "required": ["heart_rate", "spo2", "skin_temp"]
+    }
+  },
+  {
+    "name": "trend_test",
+    "description": "Deterministic Mann-Kendall non-parametric test and Theil-Sen slope estimator on a numeric series. The model must never compute this itself.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": { "type": "number" },
+          "description": "Sequential numerical measurements (e.g. daily heart rate, cytokine levels, or HRV)."
+        },
+        "dates": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Optional ISO dates or day indices corresponding to the values."
+        }
+      },
+      "required": ["values"]
+    }
+  },
+  {
+    "name": "osdr_search",
+    "description": "Query NASA Open Science Data Repository (OSDR) for spaceflight omics, immune, hematology, and analog studies (e.g. OSD-569, OSD-294, OSD-575).",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Search keyword or biomarker name (e.g. 'cytokine', 'Inspiration4', 'Twin Study', 'cardiovascular')."
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Maximum number of study accessions to return (default 5)."
+        }
+      },
+      "required": ["query"]
+    }
+  },
+  {
+    "name": "ntrs_search",
+    "description": "Search NASA Technical Reports Server (NTRS) and Human Research Program (HRP) evidence reports for flight medical countermeasures.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Medical risk or countermeasure topic (e.g. 'cardiovascular deconditioning', 'radiation limits', 'circadian lighting')."
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Maximum citations to return (default 5)."
+        }
+      },
+      "required": ["query"]
+    }
+  },
+  {
+    "name": "cite_check",
+    "description": "Deterministic provenance gate. Return true only if every numeric claim in the payload maps to a verified dataset ID and an official source URL.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "claims": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "text": { "type": "string" },
+              "source_url": { "type": "string" },
+              "dataset_id": { "type": "string" }
+            },
+            "required": ["text", "source_url", "dataset_id"]
+          }
+        }
+      },
+      "required": ["claims"]
+    }
+  }
+]

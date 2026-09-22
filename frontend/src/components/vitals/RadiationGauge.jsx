@@ -8,6 +8,7 @@ export default function RadiationGauge({
   careerLimitPct = 2.08,
   isInSaa = false,
   projectedDaysToLimit = 730,
+  sourceBadge = 'LIVE NOAA',
 }) {
   // SVG semicircle geometry: radius 100, center (120, 110)
   const radius = 85;
@@ -33,6 +34,9 @@ export default function RadiationGauge({
           <Radiation size={17} className="text-[#B873FF]" />
           <span className="font-hud text-xs tracking-wider uppercase text-[#E8EDF5]">
             RADIATION EXPOSURE
+          </span>
+          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-[#A8B2C1] border border-white/10 uppercase">
+            {sourceBadge}
           </span>
         </div>
 

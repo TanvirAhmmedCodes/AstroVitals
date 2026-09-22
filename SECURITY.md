@@ -1,4 +1,4 @@
-# Security Policy & Guidelines — AstroVitals Neuro-Shield
+# Security Policy & Guidelines - AstroVitals Neuro-Shield
 
 AstroVitals is designed to monitor astronaut health metrics during long-duration spaceflight. Operational safety, cryptographic integrity, and data privacy are core tenets of the platform architecture.
 

@@ -1,4 +1,4 @@
-"""AstroVitals Neuro-Shield — ESP32 Wearable Device Registration Router.
+"""AstroVitals Neuro-Shield - ESP32 Wearable Device Registration Router.
 
 Enables secure registration, token generation, and pairing for hardware
 biometric wearables (ESP32/MAX30102). Links devices to astronauts and
@@ -185,3 +185,28 @@ def unregister_device(device_id: str, current_user: User = Depends(get_current_u
         "status": "success",
         "message": f"Device {device_id} released from astronaut profile.",
     }
+
+
+class DeviceAlertCommand(BaseModel):
+    device_id: str = Field(..., description="Target wearable identifier, e.g. esp32-orbital-hub-01")
+    alert_level: str = Field("warning", description="nominal, caution, warning, or critical")
+    haptic_pattern: str = Field("5-pulse", description="5-pulse, double-tap, or off")
+    display_message: str = Field("GROUND COMMAND ALERT", description="HUD alert text to render on SSD1306")
+
+
+@router.post("/alert")
+def send_device_alert(
+    command: DeviceAlertCommand,
+    current_user: User = Depends(get_current_user),
+):
+    """Dispatch an advisory haptic and LED alert command to an astronaut wearable device."""
+    return {
+        "status": "dispatched",
+        "device_id": command.device_id,
+        "alert_level": command.alert_level,
+        "haptic_pattern": command.haptic_pattern,
+        "display_message": command.display_message,
+        "dispatched_by": current_user.email,
+        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+    }
+

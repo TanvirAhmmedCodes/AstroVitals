@@ -1,4 +1,4 @@
-# NASA Human Research Program (HRP) — Complete Reference
+# NASA Human Research Program (HRP) - Complete Reference
 # For AstroVitals Neuro-Shield Project
 # Source: https://humanresearchroadmap.nasa.gov
 # Compiled: September 2026
@@ -30,7 +30,7 @@ the atmosphere and magnetosphere to shield crew.
 **AstroVitals mapping:**
 - Risk Category: "Radiation Dose Risk"
 - Source of calibration: NASA-STD-3001, Vol 1, Rev C
-- Sensor proxy: simulated dosimeter (or real Geiger tube)
+- Sensor proxy: NOAA SWPC space weather telemetry, NASA-STD-3001 reference dosimetry, and analog fixtures
 - Tracked via: radiation_dose_uSv_cumulative
 
 ---

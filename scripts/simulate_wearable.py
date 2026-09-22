@@ -23,6 +23,7 @@ class WearableSimulator:
         self.spo2_base = p["spo2"]
         self.temp_base = p["temp"]
         self.battery = 87.0
+        self.rssi = -45.0
         # Baseline cumulative career dose on Mission Day 42: 12,500 uSv (12.5 mSv = 2.08% limit)
         # REMOVE simulator in production: ESP32 hardware sends real biosensor packet over Wi-Fi
         self.radiation = 12500.0

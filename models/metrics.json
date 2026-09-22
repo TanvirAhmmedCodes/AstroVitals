@@ -1,114 +1,345 @@
 {
-  "cardiovascular": {
-    "MAE": 22.04117103164767,
-    "RMSE": 34.524191421099104,
-    "R2": -0.4291836481153646,
-    "CV_R2_mean": -0.2899140930656572,
-    "CV_R2_std": 0.1516074051960683,
-    "n_samples": 55,
-    "n_features": 21,
-    "target_biomarkers": [
-      "CRP",
-      "IL6",
-      "TNF",
-      "Fibrinogen"
-    ],
-    "feature_columns": [
-      "ALT",
-      "AST",
-      "Albumin",
-      "BUN",
-      "Basophils",
-      "Calcium",
-      "Chloride",
-      "Creatinine",
-      "Eosinophils",
-      "Glucose",
-      "Hematocrit",
-      "Hemoglobin",
-      "Potassium",
-      "Sodium",
-      "WBC",
-      "Neutrophils",
-      "Lymphocytes",
-      "Monocytes",
-      "Platelets",
-      "Age",
-      "Mission_Day"
-    ]
+  "evaluation_timestamp": "2026-09-22T14:30:29.626506Z",
+  "validation_strategy": "GroupKFold (n_splits=5) grouped on subject_id (zero cross-subject leakage)",
+  "cohorts": [
+    {
+      "name": "Inspiration4_LEO",
+      "accession": "OSD-569/570/571/575",
+      "subjects": 4,
+      "type": "Orbital spaceflight"
+    },
+    {
+      "name": "Twin_Study_Longitudinal",
+      "accession": "OSD-294",
+      "subjects": 2,
+      "type": "Year-long spaceflight & ground twin"
+    },
+    {
+      "name": "HRP_Bed_Rest_Analog",
+      "accession": "OSD-379",
+      "subjects": 16,
+      "type": "70-Day 6-deg head-down tilt bedrest"
+    },
+    {
+      "name": "ESA_Concordia_Station",
+      "accession": "ESA-ICE-CONCORDIA",
+      "subjects": 14,
+      "type": "Antarctic winter-over polar isolation"
+    }
+  ],
+  "total_subjects": 36,
+  "total_samples": 299,
+  "models": {
+    "cardiovascular": {
+      "selected_algorithm": "BayesianRidge",
+      "apparent_r2": 0.9407,
+      "apparent_mae": 3.99,
+      "apparent_rmse": 5.19,
+      "cv_r2_mean": 0.6732,
+      "cv_r2_std": 0.2085,
+      "cv_mae": 5.34,
+      "cv_rmse": 8.4,
+      "all_algorithms_comparison": {
+        "Ridge": {
+          "mean_r2": 0.6051,
+          "std_r2": 0.3856,
+          "mae": 5.63,
+          "rmse": 7.32,
+          "fold_r2_scores": [
+            0.1486,
+            0.1181,
+            0.9384,
+            0.9278,
+            0.8926
+          ]
+        },
+        "BayesianRidge": {
+          "mean_r2": 0.6732,
+          "std_r2": 0.2085,
+          "mae": 5.34,
+          "rmse": 8.4,
+          "fold_r2_scores": [
+            0.4715,
+            0.3949,
+            0.7462,
+            0.9512,
+            0.8022
+          ]
+        },
+        "ElasticNet": {
+          "mean_r2": 0.589,
+          "std_r2": 0.3939,
+          "mae": 5.89,
+          "rmse": 7.6,
+          "fold_r2_scores": [
+            0.1246,
+            0.0901,
+            0.9327,
+            0.9217,
+            0.8757
+          ]
+        },
+        "HuberRegressor": {
+          "mean_r2": 0.4176,
+          "std_r2": 0.3202,
+          "mae": 6.33,
+          "rmse": 13.14,
+          "fold_r2_scores": [
+            0.5166,
+            0.4348,
+            0.2178,
+            0.9387,
+            -0.0196
+          ]
+        },
+        "GradientBoosting_ES": {
+          "mean_r2": 0.9286,
+          "std_r2": 0.074,
+          "mae": 2.2,
+          "rmse": 2.91,
+          "fold_r2_scores": [
+            0.844,
+            0.8322,
+            0.9922,
+            0.9873,
+            0.9872
+          ]
+        },
+        "VotingRegressor": {
+          "mean_r2": 0.6623,
+          "std_r2": 0.2364,
+          "mae": 5.26,
+          "rmse": 8.25,
+          "fold_r2_scores": [
+            0.4113,
+            0.3527,
+            0.7968,
+            0.9519,
+            0.7988
+          ]
+        }
+      },
+      "n_samples": 299,
+      "n_subjects": 36,
+      "n_features": 25
+    },
+    "sleep_behavioral": {
+      "selected_algorithm": "VotingRegressor",
+      "apparent_r2": 0.822,
+      "apparent_mae": 5.6,
+      "apparent_rmse": 7.55,
+      "cv_r2_mean": 0.5766,
+      "cv_r2_std": 0.2482,
+      "cv_mae": 6.49,
+      "cv_rmse": 9.08,
+      "all_algorithms_comparison": {
+        "Ridge": {
+          "mean_r2": 0.5223,
+          "std_r2": 0.3231,
+          "mae": 7.18,
+          "rmse": 9.26,
+          "fold_r2_scores": [
+            0.1058,
+            0.1485,
+            0.7678,
+            0.8028,
+            0.7866
+          ]
+        },
+        "BayesianRidge": {
+          "mean_r2": 0.5139,
+          "std_r2": 0.2299,
+          "mae": 6.89,
+          "rmse": 10.13,
+          "fold_r2_scores": [
+            0.2389,
+            0.2651,
+            0.5629,
+            0.8276,
+            0.6749
+          ]
+        },
+        "ElasticNet": {
+          "mean_r2": 0.4965,
+          "std_r2": 0.3389,
+          "mae": 7.39,
+          "rmse": 9.52,
+          "fold_r2_scores": [
+            0.0512,
+            0.1137,
+            0.7554,
+            0.7905,
+            0.772
+          ]
+        },
+        "HuberRegressor": {
+          "mean_r2": 0.5479,
+          "std_r2": 0.177,
+          "mae": 6.58,
+          "rmse": 10.19,
+          "fold_r2_scores": [
+            0.4192,
+            0.3767,
+            0.4217,
+            0.8067,
+            0.7151
+          ]
+        },
+        "GradientBoosting_ES": {
+          "mean_r2": 0.6598,
+          "std_r2": 0.2565,
+          "mae": 5.71,
+          "rmse": 7.55,
+          "fold_r2_scores": [
+            0.3753,
+            0.3244,
+            0.8,
+            0.8786,
+            0.9205
+          ]
+        },
+        "VotingRegressor": {
+          "mean_r2": 0.5766,
+          "std_r2": 0.2482,
+          "mae": 6.49,
+          "rmse": 9.08,
+          "fold_r2_scores": [
+            0.2715,
+            0.2881,
+            0.6771,
+            0.8272,
+            0.819
+          ]
+        }
+      },
+      "n_samples": 299,
+      "n_subjects": 36,
+      "n_features": 24
+    },
+    "immune": {
+      "selected_algorithm": "BayesianRidge",
+      "apparent_r2": 0.9308,
+      "apparent_mae": 4.21,
+      "apparent_rmse": 5.58,
+      "cv_r2_mean": 0.6698,
+      "cv_r2_std": 0.3082,
+      "cv_mae": 5.15,
+      "cv_rmse": 7.05,
+      "all_algorithms_comparison": {
+        "Ridge": {
+          "mean_r2": 0.5825,
+          "std_r2": 0.4162,
+          "mae": 5.56,
+          "rmse": 7.41,
+          "fold_r2_scores": [
+            0.1025,
+            0.0447,
+            0.9437,
+            0.9259,
+            0.8955
+          ]
+        },
+        "BayesianRidge": {
+          "mean_r2": 0.6698,
+          "std_r2": 0.3082,
+          "mae": 5.15,
+          "rmse": 7.05,
+          "fold_r2_scores": [
+            0.3063,
+            0.2792,
+            0.922,
+            0.9373,
+            0.9042
+          ]
+        },
+        "ElasticNet": {
+          "mean_r2": 0.5613,
+          "std_r2": 0.4332,
+          "mae": 5.79,
+          "rmse": 7.66,
+          "fold_r2_scores": [
+            0.0517,
+            0.0112,
+            0.9392,
+            0.9232,
+            0.8812
+          ]
+        },
+        "HuberRegressor": {
+          "mean_r2": 0.6237,
+          "std_r2": 0.2594,
+          "mae": 5.57,
+          "rmse": 8.82,
+          "fold_r2_scores": [
+            0.3025,
+            0.325,
+            0.7819,
+            0.9337,
+            0.7754
+          ]
+        },
+        "GradientBoosting_ES": {
+          "mean_r2": 0.7547,
+          "std_r2": 0.2624,
+          "mae": 4.04,
+          "rmse": 5.19,
+          "fold_r2_scores": [
+            0.4437,
+            0.4233,
+            0.9745,
+            0.9565,
+            0.9754
+          ]
+        },
+        "VotingRegressor": {
+          "mean_r2": 0.6606,
+          "std_r2": 0.3342,
+          "mae": 5.06,
+          "rmse": 6.82,
+          "fold_r2_scores": [
+            0.2551,
+            0.2476,
+            0.9309,
+            0.9377,
+            0.9319
+          ]
+        }
+      },
+      "n_samples": 299,
+      "n_subjects": 36,
+      "n_features": 25
+    }
   },
-  "sleep_behavioral": {
-    "MAE": 24.85523313489182,
-    "RMSE": 38.79231298160144,
-    "R2": -0.3487856971997436,
-    "CV_R2_mean": -0.6966920833233569,
-    "CV_R2_std": 0.9595280110314541,
-    "n_samples": 55,
-    "n_features": 19,
-    "target_biomarkers": [
-      "IL6",
-      "IL10",
-      "Glucose"
-    ],
-    "feature_columns": [
-      "ALT",
-      "AST",
-      "Albumin",
-      "BUN",
-      "Basophils",
-      "Calcium",
-      "Chloride",
-      "Creatinine",
-      "Eosinophils",
-      "Hematocrit",
-      "Hemoglobin",
-      "Potassium",
-      "Sodium",
-      "WBC",
-      "Neutrophils",
-      "Lymphocytes",
-      "Platelets",
-      "Age",
-      "Mission_Day"
-    ]
+  "reference_test_sample": {
+    "ALT": 21.405747468469727,
+    "AST": 19.8521418412218,
+    "Albumin": 4.4,
+    "BUN": 16.869161012921893,
+    "Basophils": 0.0516151728313926,
+    "Calcium": 9.61634694516195,
+    "Chloride": 102.5,
+    "Creatinine": 1.0357126045366063,
+    "Eosinophils": 0.1687742148467374,
+    "Glucose": 90.63937891555469,
+    "Hematocrit": 43.2695684528931,
+    "Hemoglobin": 14.415561140303009,
+    "Potassium": 4.056813370354156,
+    "Sodium": 140.32202523780006,
+    "WBC": 6.9,
+    "Neutrophils": 4.463620641885443,
+    "Lymphocytes": 1.84453614256288,
+    "Monocytes": 0.4404627228931813,
+    "Platelets": 243.47382626641425,
+    "Age": 40.0,
+    "Mission_Day": 50.0,
+    "NLR": 2.3076699948380632,
+    "BUN_to_Creatinine": 16.57098669883669,
+    "Inflammation_Index": 2.2712552801793717,
+    "CardioMetabolic_Ratio": 445.91437472349935
   },
-  "immune": {
-    "MAE": 24.00779042580818,
-    "RMSE": 36.14355430206106,
-    "R2": -0.17088250835489238,
-    "CV_R2_mean": -0.777027709361065,
-    "CV_R2_std": 0.9818692853222478,
-    "n_samples": 55,
-    "n_features": 19,
-    "target_biomarkers": [
-      "IL6",
-      "TNF",
-      "IFNG",
-      "IL10",
-      "IL12",
-      "IL17",
-      "CRP"
-    ],
-    "feature_columns": [
-      "ALT",
-      "AST",
-      "Albumin",
-      "BUN",
-      "Basophils",
-      "Calcium",
-      "Chloride",
-      "Creatinine",
-      "Eosinophils",
-      "Glucose",
-      "Hematocrit",
-      "Hemoglobin",
-      "Potassium",
-      "Sodium",
-      "WBC",
-      "Monocytes",
-      "Platelets",
-      "Age",
-      "Mission_Day"
-    ]
+  "reference_expected_predictions": {
+    "cardiovascular": 47.994,
+    "sleep_behavioral": 48.871,
+    "immune": 47.893
   }
 }

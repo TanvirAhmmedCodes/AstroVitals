@@ -1,0 +1,26 @@
+[
+  {
+    "id": "NASA/TM-2022-0002812",
+    "title": "Risk of Cardiovascular Disease and Recovery Post-Spaceflight",
+    "author": "Human Research Program Cardiovascular Discipline Team",
+    "year": 2022,
+    "source_url": "https://ntrs.nasa.gov/citations/20220002812",
+    "key_countermeasure": "High-intensity aerobic interval exercise (ARED + T2 Treadmill) + daily fluid loading."
+  },
+  {
+    "id": "NASA/SP-2020-0014299",
+    "title": "Human Health and Performance Risks of Space Exploration Missions (HRP Evidence Book)",
+    "author": "NASA Human Research Program",
+    "year": 2020,
+    "source_url": "https://humanresearchroadmap.nasa.gov/evidence/",
+    "key_countermeasure": "Radiation shielding water walls + sleep hygiene circadian lighting + antioxidant nutritional regimens."
+  },
+  {
+    "id": "NASA-STD-3001-V1-REV-C",
+    "title": "NASA Space Flight Human-System Standard: Crew Health",
+    "author": "Office of the Chief Health and Medical Officer",
+    "year": 2023,
+    "source_url": "https://www.nasa.gov/hhp/standards/",
+    "key_countermeasure": "600 mSv lifetime career effective dose ceiling and 250 mSv 30-day Solar Particle Event threshold."
+  }
+]

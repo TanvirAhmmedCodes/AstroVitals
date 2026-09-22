@@ -1,0 +1,21 @@
+{
+  "latitude": -23.456,
+  "longitude": -44.128,
+  "altitude_km": 418.5,
+  "velocity_kmh": 27600.0,
+  "in_saa": true,
+  "timestamp": "2026-10-04T12:05:00+00:00",
+  "source": "open-notify",
+  "mode": "FIXTURE",
+  "south_atlantic_anomaly": {
+    "in_region": true,
+    "radiation_multiplier": 10.0,
+    "warning": true,
+    "boundary": "Lat [-50, 0], Lon [-90, 40]"
+  },
+  "provenance": {
+    "dataset_id": "NASA-ISS-EPHEMERIS",
+    "source_url": "https://spotthestation.nasa.gov/trajectory_data.cfm",
+    "data_mode": "fixture"
+  }
+}

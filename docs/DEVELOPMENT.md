@@ -1,11 +1,11 @@
-# AstroVitals Neuro-Shield — Engineering & Development Guide
+# AstroVitals Neuro-Shield - Engineering & Development Guide
 
 ### Author: MD Tanvir Ahmmed · Team Orbitrix
 **NASA Space Apps Challenge 2026 · Dhaka, Bangladesh**
 
 ---
 
-## 1. Project Overview & State (Phases 1–5)
+## 1. Project Overview & State (Phases 1-5)
 
 AstroVitals Neuro-Shield is an integrated astronaut bio-telemetry, physiological risk forecasting, and cognitive resilience platform developed for deep-space missions and orbital habitats.
 
@@ -124,7 +124,7 @@ The predictive risk models in AstroVitals were trained on NASA Open Science Data
 ## 6. Credits & Authorship
 
 - **System Architect & Lead Developer:** MD Tanvir Ahmmed (`tanvirahmmed13579@gmail.com`)
-- **Team:** Team Orbitrix — Dhaka, Bangladesh
+- **Team:** Team Orbitrix - Dhaka, Bangladesh
 - **Event:** NASA Space Apps Challenge 2026
 - **Attributions:** NASA Open Science Data Repository (OSDR), NASA Human Research Program (HRP), ESA COGNISPACE, NASA-STD-3001.
 - **License:** MIT License.

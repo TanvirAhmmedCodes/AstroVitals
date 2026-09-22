@@ -13,9 +13,11 @@ import TelemetryWave from '../components/vitals/TelemetryWave';
 import RiskPanel from '../components/dashboard/RiskPanel';
 import AIChatPreview from '../components/dashboard/AIChatPreview';
 import NASADataPanel from '../components/dashboard/NASADataPanel';
+import ProvenanceDrawer from '../components/common/ProvenanceDrawer';
 import { ShieldCheck, AlertTriangle } from 'lucide-react';
 
 export default function Dashboard() {
+  const [activeProvenance, setActiveProvenance] = useState(null);
   const {
     selectedAstronautId,
     selectedAstronaut,
@@ -176,6 +178,8 @@ export default function Dashboard() {
           color="#FF4D6D"
           sparkline={hrSparkline}
           isHeartRate={true}
+          provenance={vitals?.provenance}
+          onOpenProvenance={setActiveProvenance}
         />
 
         <VitalsTile
@@ -186,6 +190,8 @@ export default function Dashboard() {
           status="nominal"
           color="#4DA6FF"
           sparkline={spo2Sparkline}
+          provenance={vitals?.provenance}
+          onOpenProvenance={setActiveProvenance}
         />
 
         <VitalsTile
@@ -196,6 +202,8 @@ export default function Dashboard() {
           status="nominal"
           color="#FFA94D"
           sparkline={tempSparkline}
+          provenance={vitals?.provenance}
+          onOpenProvenance={setActiveProvenance}
         />
 
         <RadiationGauge
@@ -205,6 +213,7 @@ export default function Dashboard() {
           careerLimitPct={((vitals?.radiation_dose_uSv_cumulative || 12500) / 600000) * 100}
           isInSaa={radiation?.is_in_saa || false}
           projectedDaysToLimit={radiation?.projected_days_to_limit || 730}
+          sourceBadge={radiation?.data_source || 'LIVE NOAA'}
         />
       </div>
 
@@ -226,6 +235,13 @@ export default function Dashboard() {
 
       {/* Row 4: NASA Data Used Persistent Panel */}
       <NASADataPanel />
+
+      {/* Scientific Data Provenance Drawer */}
+      <ProvenanceDrawer
+        isOpen={!!activeProvenance}
+        onClose={() => setActiveProvenance(null)}
+        provenance={activeProvenance}
+      />
     </div>
   );
 }

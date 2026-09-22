@@ -1,11 +1,22 @@
 # Python
 __pycache__/
 *.pyc
+*.pyo
 .venv/
 venv/
 backend/venv/
 *.db
+*.db.bak
 *.sqlite3
+*.log
+
+# Scratch, temporary and backups
+scratch/
+tmp/
+backup/
+*_backup.*
+*_old.*
+backend/models/archive/
 
 # Node
 node_modules/
@@ -25,14 +36,21 @@ backend/.env
 !frontend/.env.example
 !backend/.env.example
 
-# API keys (individual files)
-api/nasa_api_key.txt
+# API keys and credentials (ignore credential files only; config files like open_notify.txt and ll2_config.txt remain tracked)
+api/*_key*.txt
+api/*_token*.txt
+api/credentials*.txt
 api/gemini_api_key.txt
-api/*_key.txt
-!api/ll2_config.txt
-!api/open_notify.txt
-!api/nasa_api_key.txt.example
-!api/gemini_api_key.txt.example
+api/nasa_api_key.txt
+!api/*.txt.example
+
+# Keep committed demo fixtures
+!demo_fixtures/
+!demo_fixtures/**
+
+# Runtime API cache (transient live fetch cache; demo_fixtures/ are committed fixtures)
+cache/
+!cache/.gitkeep
 
 # Data (large)
 data/osdr_i4/

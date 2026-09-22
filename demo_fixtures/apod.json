@@ -1,0 +1,14 @@
+{
+  "title": "Earth and Aurora from the International Space Station",
+  "date": "2026-10-04",
+  "explanation": "Astronauts aboard the International Space Station captured this striking vista of orbital sunrise brushing against Earth's thin atmospheric limb while auroral curtains dance across the polar upper ionosphere.",
+  "media_type": "image",
+  "url": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200",
+  "hdurl": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200",
+  "copyright": "NASA / ISS Expedition Crew",
+  "provenance": {
+    "dataset_id": "NASA-APOD-20261004",
+    "source_url": "https://api.nasa.gov/planetary/apod",
+    "data_mode": "fixture"
+  }
+}

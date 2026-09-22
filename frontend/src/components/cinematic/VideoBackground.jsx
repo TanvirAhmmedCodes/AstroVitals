@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 /**
- * VideoBackground — High-performance NASA Public Domain video background.
+ * VideoBackground - High-performance NASA Public Domain video background.
  *
  * Features:
  * - Lazy load via IntersectionObserver (plays only when in viewport)

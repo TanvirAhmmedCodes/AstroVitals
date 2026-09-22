@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { AlertOctagon, RefreshCw, Home } from 'lucide-react';
 
 /**
- * ErrorBoundary — Global React Error Boundary for AstroVitals Neuro-Shield.
+ * ErrorBoundary - Global React Error Boundary for AstroVitals Neuro-Shield.
  *
  * Catches unhandled runtime rendering errors, displays a mission-grade recovery
  * console, and provides buttons to reload the application or return to safety.

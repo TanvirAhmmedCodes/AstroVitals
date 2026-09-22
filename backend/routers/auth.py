@@ -1,4 +1,4 @@
-"""AstroVitals Neuro-Shield — Authentication & Identity Router.
+"""AstroVitals Neuro-Shield - Authentication & Identity Router.
 
 Manages registration, login, JWT token issuance, email verification,
 password recovery, and profile configuration.
@@ -220,7 +220,7 @@ def register(
         "token_type": "bearer",
         "user": _serialize_user(new_user),
         "message": "Registration successful. Welcome to AstroVitals Neuro-Shield.",
-        "welcome_message": f"Hi {first_name}! I'm Ori — your mission companion. Welcome aboard AstroVitals. I'll be right here whenever you need me. Tap the button to chat.",
+        "welcome_message": f"Hi {first_name}! I'm Ori - your mission companion. Welcome aboard AstroVitals. I'll be right here whenever you need me. Tap the button to chat.",
         "is_new_user": True,
     }
 

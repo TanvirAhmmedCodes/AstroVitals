@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowUpRight, ArrowDownRight, Heart } from 'lucide-react';
+import ProvenanceBadge from '../common/ProvenanceBadge';
 
 export default function VitalsTile({
   label,
@@ -10,6 +11,8 @@ export default function VitalsTile({
   color = '#4A90E2',
   sparkline = [],
   isHeartRate = false,
+  provenance = null,
+  onOpenProvenance = null,
 }) {
   const [flash, setFlash] = useState(false);
   const [prevVal, setPrevVal] = useState(value);
@@ -106,17 +109,26 @@ export default function VitalsTile({
           </span>
         </div>
 
-        {/* Delta indicator */}
-        {delta !== undefined && delta !== null && (
-          <div
-            className={`flex items-center gap-0.5 text-xs font-mono font-bold ${
-              isPositiveDelta ? 'text-[#10B981]' : 'text-[#4DA6FF]'
-            }`}
-          >
-            {isPositiveDelta ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
-            <span>{isPositiveDelta ? `+${delta}` : delta}%</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {provenance && (
+            <ProvenanceBadge
+              provenance={provenance}
+              onClick={onOpenProvenance}
+            />
+          )}
+
+          {/* Delta indicator */}
+          {delta !== undefined && delta !== null && (
+            <div
+              className={`flex items-center gap-0.5 text-xs font-mono font-bold ${
+                isPositiveDelta ? 'text-[#10B981]' : 'text-[#4DA6FF]'
+              }`}
+            >
+              {isPositiveDelta ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
+              <span>{isPositiveDelta ? `+${delta}` : delta}%</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Primary Value Readout (Huge 52-64px monospace font, tabular-nums) */}

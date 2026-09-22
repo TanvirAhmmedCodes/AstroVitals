@@ -67,7 +67,7 @@ export function useAmbientSound(enabled = true) {
       document.removeEventListener("click", handleInteraction);
       document.removeEventListener("keydown", handleInteraction);
       document.removeEventListener("touchstart", handleInteraction);
-      // DO NOT stop audio on unmount — persists across pages
+      // DO NOT stop audio on unmount - persists across pages
     };
   }, [enabled]);
 

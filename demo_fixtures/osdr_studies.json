@@ -1,0 +1,56 @@
+[
+  {
+    "accession": "OSD-569",
+    "title": "Inspiration4 Crew Hematology and Complete Blood Count Longitudinal Profiling",
+    "organism": "Homo sapiens",
+    "assay_type": "Complete Blood Count / Cell Differential",
+    "mission": "Inspiration4 (SpaceX Dragon, 3-day LEO)",
+    "subjects": 4,
+    "source_url": "https://osdr.nasa.gov/osdr/data/osd/files/569"
+  },
+  {
+    "accession": "OSD-570",
+    "title": "Single-Cell RNA Sequencing of PBMC in Inspiration4 Astronauts",
+    "organism": "Homo sapiens",
+    "assay_type": "scRNA-seq (Immune profiling)",
+    "mission": "Inspiration4",
+    "subjects": 4,
+    "source_url": "https://osdr.nasa.gov/osdr/data/osd/files/570"
+  },
+  {
+    "accession": "OSD-571",
+    "title": "Cell-Free RNA Liquid Biopsy Profiling of Spaceflight Health Stressors",
+    "organism": "Homo sapiens",
+    "assay_type": "cfRNA Liquid Biopsy",
+    "mission": "Inspiration4",
+    "subjects": 4,
+    "source_url": "https://osdr.nasa.gov/osdr/data/osd/files/571"
+  },
+  {
+    "accession": "OSD-575",
+    "title": "Serum Cytokine and Chemokine Longitudinal Immunoassays (Inspiration4)",
+    "organism": "Homo sapiens",
+    "assay_type": "Multiplex Immunoassay (65 cytokines)",
+    "mission": "Inspiration4",
+    "subjects": 4,
+    "source_url": "https://osdr.nasa.gov/osdr/data/osd/files/575"
+  },
+  {
+    "accession": "OSD-294",
+    "title": "NASA Twin Study: Multi-Omic Assessment of One-Year Spaceflight vs Ground Control",
+    "organism": "Homo sapiens",
+    "assay_type": "Whole Genome, Transcriptome, Proteome, Cytokines, Telomeres",
+    "mission": "ISS One-Year Mission",
+    "subjects": 2,
+    "source_url": "https://osdr.nasa.gov/osdr/data/osd/files/294"
+  },
+  {
+    "accession": "OSD-379",
+    "title": "NASA HRP 70-Day 6-Degree Head-Down Tilt Bed Rest Cardiovascular and Immune Manifold",
+    "organism": "Homo sapiens",
+    "assay_type": "Cardiovascular, Immune, Muscle Atrophy, Endocrine Markers",
+    "mission": "NASA Flight Analogs Research Center (FARC)",
+    "subjects": 16,
+    "source_url": "https://osdr.nasa.gov/osdr/data/osd/files/379"
+  }
+]

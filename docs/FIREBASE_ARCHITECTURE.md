@@ -1,4 +1,4 @@
-# AstroVitals Neuro-Shield — Firebase Real-Time Architecture
+# AstroVitals Neuro-Shield - Firebase Real-Time Architecture
 
 > **Dual-Layer Architecture**: Robust SQLite persistence and JWT security paired with Google Cloud Firestore for sub-second reactive synchronization and hardware telemetry dispatch.
 

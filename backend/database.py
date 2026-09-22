@@ -1,4 +1,4 @@
-"""AstroVitals Neuro-Shield — Core Database Schema & Session Factory.
+"""AstroVitals Neuro-Shield - Core Database Schema & Session Factory.
 
 Defines tables for AstronautProfile, Telemetry, RiskSnapshot, CognitiveTest,
 ChatMessage, Alert, User, LoginHistory, and AuditLog.

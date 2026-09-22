@@ -12,9 +12,10 @@ except ImportError:
 
 
 class ModelRegistry:
-    """Manages access to FROZEN ML models and baseline statistics.
+    """Manages access to trained ML models and baseline statistics.
 
-    CRITICAL: Models are FROZEN in /models/. Never retrain. Negative R² is intentional.
+    Models are trained with 5-fold GroupKFold cross-validation grouped strictly
+    by subject_id across 36 subjects (zero cross-subject leakage).
     """
 
     def __init__(self):
@@ -146,7 +147,7 @@ class ModelRegistry:
         return pd.DataFrame([data])
 
     def score(self, category: str, features_df: pd.DataFrame) -> float:
-        """Score risk for category using the frozen VotingRegressor ensemble.
+        """Score risk for category using the regularized linear model.
 
         Returns bounded risk score (0-100).
         """
@@ -176,7 +177,7 @@ class ModelRegistry:
             return 15.0
 
     def detect_anomaly(self, features_df: pd.DataFrame, vitals: Optional[Dict[str, Any]] = None) -> bool:
-        """Detect anomaly using frozen IsolationForest and physiological safety boundaries.
+        """Detect anomaly using IsolationForest and physiological safety boundaries.
 
         Returns True if an anomaly is detected.
         """
@@ -193,7 +194,7 @@ class ModelRegistry:
             if temp is not None and (temp < 35.0 or temp > 38.5):
                 return True
 
-        # 2. Frozen IsolationForest model prediction
+        # 2. IsolationForest model prediction
         if not self.anomaly or not isinstance(self.anomaly, dict):
             return False
 
@@ -204,7 +205,10 @@ class ModelRegistry:
                 X_df[c] = self.baseline_stats.get(c, {}).get("median", 0.0)
 
         try:
-            X = X_df[cols].fillna(0)
+            if "imputer" in self.anomaly and self.anomaly["imputer"] is not None:
+                X = self.anomaly["imputer"].transform(X_df[cols])
+            else:
+                X = X_df[cols].fillna(0).to_numpy()
             pred = self.anomaly["model"].predict(X)[0]
             # IsolationForest returns -1 for outlier/anomaly, 1 for inlier
             return bool(pred == -1)

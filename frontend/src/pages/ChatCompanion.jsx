@@ -48,7 +48,7 @@ export default function ChatCompanion() {
       {
         id: 'initial-1',
         role: 'assistant',
-        content: `Hi ${firstName}! I'm **Ori** — your mission AI companion. Telemetry indicates your heart rate is nominal at ${vitals?.heart_rate_bpm || 72} BPM, SpO2 is ${vitals?.spo2_pct || 98}%, and circadian recovery is balanced. How can I assist your mission duties or wellness today?`,
+        content: `Hi ${firstName}! I'm **Ori** - your mission AI companion. Telemetry indicates your heart rate is nominal at ${vitals?.heart_rate_bpm || 72} BPM, SpO2 is ${vitals?.spo2_pct || 98}%, and circadian recovery is balanced. How can I assist your mission duties or wellness today?`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       },
     ];

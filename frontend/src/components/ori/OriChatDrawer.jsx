@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 
 /**
- * OriChatDrawer — Floating slide-in conversation drawer with Ori.
+ * OriChatDrawer - Floating slide-in conversation drawer with Ori.
  *
  * Sized 420px x 640px on desktop; full-screen responsive takeover on mobile.
  * Injects real-time mission telemetry and verified credentials.
@@ -59,7 +59,7 @@ export default function OriChatDrawer() {
       {
         id: 'ori-intro',
         role: 'assistant',
-        content: `Hi ${firstName}! I'm **Ori**, your orbital companion. I'm actively monitoring your telemetry—heart rate is ${vitals?.heart_rate_bpm || 72} BPM and SpO2 is ${vitals?.spo2_pct || 98}%. How are you feeling right now?`,
+        content: `Hi ${firstName}! I'm **Ori**, your orbital companion. I'm actively monitoring your telemetry-heart rate is ${vitals?.heart_rate_bpm || 72} BPM and SpO2 is ${vitals?.spo2_pct || 98}%. How are you feeling right now?`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       },
     ];

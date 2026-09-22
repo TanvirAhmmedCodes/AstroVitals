@@ -1,4 +1,4 @@
-"""AstroVitals Neuro-Shield — Backend Package."""
+"""AstroVitals Neuro-Shield - Backend Package."""
 import sys
 from pathlib import Path
 

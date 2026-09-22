@@ -269,7 +269,7 @@ export default function LiveVitals() {
       >
         <div className="flex flex-wrap items-center justify-between pb-3 mb-3 border-b border-white/5 gap-2">
           <span className="text-xs font-mono font-bold tracking-wider uppercase text-[#00D4FF]">
-            HR / SpO2 / TEMP / MOTION — OVERLAID BIOSIGNALS
+            HR / SpO2 / TEMP / MOTION - OVERLAID BIOSIGNALS
           </span>
 
           <div className="flex flex-wrap items-center gap-4 text-xs font-mono">

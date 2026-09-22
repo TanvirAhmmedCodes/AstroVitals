@@ -199,7 +199,7 @@ def build_target(df, category):
     weights = RISK_WEIGHTS[category]
     available = [b for b in biomarkers if b in df.columns]
     if not available:
-        print(f"  [WARN] No target biomarkers for {category} — using random proxy")
+        print(f"  [WARN] No target biomarkers for {category} - using random proxy")
         return pd.Series(np.random.normal(50, 10, size=len(df)))
     print(f"  [INFO] Using target biomarkers: {available}")
     z_sum = pd.Series(np.zeros(len(df)), index=df.index)
@@ -408,7 +408,7 @@ def main():
 
     elapsed = time.time() - start
     print("\n" + "=" * 60)
-    print(f"DONE — {elapsed / 60:.1f} minutes")
+    print(f"DONE - {elapsed / 60:.1f} minutes")
     print("=" * 60)
     for cat, m in all_metrics.items():
         print(f"  {cat}: R²={m['R2']:.3f}  (CV: {m['CV_R2_mean']:.3f}, samples={m['n_samples']})")

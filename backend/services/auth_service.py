@@ -1,4 +1,4 @@
-"""AstroVitals Neuro-Shield — Authentication & Token Service.
+"""AstroVitals Neuro-Shield - Authentication & Token Service.
 
 Provides secure password hashing via bcrypt, JWT token generation & verification,
 single-admin role verification, and crypto-random security tokens.

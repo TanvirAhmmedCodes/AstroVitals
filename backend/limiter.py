@@ -1,4 +1,4 @@
-"""AstroVitals Neuro-Shield — API Rate Limiter.
+"""AstroVitals Neuro-Shield - API Rate Limiter.
 
 Configures request throttling via slowapi for non-admin accounts.
 Admin (tanvirahmmed13579@gmail.com) enjoys unlimited throughput.

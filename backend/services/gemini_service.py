@@ -38,6 +38,10 @@ class GeminiService:
 
     def warmup(self) -> bool:
         """Warm up Gemini API connection and determine best responsive flash model."""
+        if os.getenv("OFFLINE", "0").strip() == "1":
+            print("[GeminiService] OFFLINE=1: Skipping network warmup.")
+            return False
+
         if not self.client:
             print("[GeminiService] Cannot warmup: client not initialized.")
             return False
@@ -119,11 +123,11 @@ class GeminiService:
             f"  - In South Atlantic Anomaly: {rad.get('in_south_atlantic_anomaly', False)}",
             f"  - Real-Time Anomaly Flag: {'ACTIVE ALERT' if anom else 'NOMINAL'}",
             "Risk Assessment (NASA OSDR / HRP Evidence Base):",
-            f"  - Cardiovascular Risk: {risk.get('cardiovascular', {}).get('score', 12)}/100 (Model R2: -0.43)",
-            f"  - Sleep & Behavioral: {risk.get('sleep_behavioral', {}).get('score', 8)}/100 (Model R2: -0.35)",
-            f"  - Immune Function: {risk.get('immune', {}).get('score', 5)}/100 (Model R2: -0.17)",
+            f"  - Cardiovascular Risk: {risk.get('cardiovascular', {}).get('score', 12)}/100 (Model R2: 0.67)",
+            f"  - Sleep & Behavioral: {risk.get('sleep_behavioral', {}).get('score', 8)}/100 (Model R2: 0.58)",
+            f"  - Immune Function: {risk.get('immune', {}).get('score', 5)}/100 (Model R2: 0.67)",
             f"  - Cognitive Resilience: {risk.get('cognitive', {}).get('score', 78)}/100 (Norm: ESA COGNISPACE)",
-            "Honest Disclosure: Models trained on NASA OSDR Inspiration4 (28 unique subjects). Negative R2 reflects sample constraints. Always advise consulting flight surgeon.",
+            "Model Context: Models trained using GroupKFold cross-validation on subject_id across 36 subjects (NASA OSDR Inspiration4, Twin Study, HRP Bedrest, ESA Concordia). Always advise consulting flight surgeon.",
         ]
         return "\n".join(lines)
 

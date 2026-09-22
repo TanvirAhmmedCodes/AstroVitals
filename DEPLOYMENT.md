@@ -1,4 +1,4 @@
-# AstroVitals Neuro-Shield — Production Deployment Guide
+# AstroVitals Neuro-Shield - Production Deployment Guide
 
 AstroVitals is architected for decoupled cloud deployment:
 - **Frontend (SPA/PWA):** Deployed to **Vercel** (Global Edge CDN)
@@ -59,12 +59,12 @@ The AstroVitals frontend is built with React 19 and Vite, styled with Tailwind C
    VITE_AUTHOR = MD Tanvir Ahmmed
 
    # Firebase Client Config (Public / Safe for Web)
-   VITE_FIREBASE_API_KEY = AIzaSyDrSuUCiBfHiamnG0ufAZrQKXHDp-r74jk
-   VITE_FIREBASE_AUTH_DOMAIN = astrovitals.firebaseapp.com
-   VITE_FIREBASE_PROJECT_ID = astrovitals
-   VITE_FIREBASE_MESSAGING_SENDER_ID = 1049915567750
-   VITE_FIREBASE_APP_ID = 1:1049915567750:web:dc01e36044e9669f71ab07
-   VITE_FIREBASE_MEASUREMENT_ID = G-P69YXM6GYK
+   VITE_FIREBASE_API_KEY = your_firebase_web_api_key_here
+   VITE_FIREBASE_AUTH_DOMAIN = your_project.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID = your_project_id
+   VITE_FIREBASE_MESSAGING_SENDER_ID = your_sender_id
+   VITE_FIREBASE_APP_ID = your_app_id
+   VITE_FIREBASE_MEASUREMENT_ID = your_measurement_id
    ```
 5. Click **Deploy**.
 6. Single Page App (SPA) routing is governed by [`frontend/vercel.json`](file:///e:/Nasa%20Space%20Apps%20Resources/AstroVitals/frontend/vercel.json):

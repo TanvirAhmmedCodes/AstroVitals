@@ -117,7 +117,7 @@ export default function MedicalDossier() {
                 1. Cardiovascular & Microgravity Hemodynamics
               </h4>
               <p className="text-[#A8B2C1] font-body leading-relaxed">
-                Resting heart rate mean: <strong className="text-white">{hrMean} BPM</strong>. SpO2 mean: <strong className="text-white">{spo2Mean}%</strong>. Skin temp: <strong className="text-white">{tempMean}°C</strong>. Fluid cephalic shift adaptation completed. Negative R² model (-0.43) confirms adherence to Inspiration4 baseline bounds without synthetic distortion.
+                Resting heart rate mean: <strong className="text-white">{hrMean} BPM</strong>. SpO2 mean: <strong className="text-white">{spo2Mean}%</strong>. Skin temp: <strong className="text-white">{tempMean}°C</strong>. Fluid cephalic shift adaptation completed. Validated BayesianRidge model (GroupKFold R² = 0.673) confirms adherence to multi-cohort baseline bounds without synthetic distortion.
               </p>
             </div>
 

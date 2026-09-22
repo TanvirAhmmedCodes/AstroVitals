@@ -116,7 +116,7 @@ export default function MissionControl() {
           <div className="flex items-center gap-2.5 text-[#FDE68A]">
             <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B] animate-ping" />
             <strong className="uppercase">DEMO MODE ACTIVE:</strong>
-            <span>Demo Crew — Register an account to see real registered astronaut data replace placeholders.</span>
+            <span>Demo Crew - Register an account to see real registered astronaut data replace placeholders.</span>
           </div>
           <Link
             to="/register"
@@ -350,7 +350,7 @@ export default function MissionControl() {
                 SLOT {crewList.length + idx + 1}
               </h4>
               <p className="text-[11px] font-mono text-[#A8B2C1] mt-1 max-w-[160px]">
-                Awaiting crew assignment — register to join
+                Awaiting crew assignment - register to join
               </p>
             </div>
             <Link

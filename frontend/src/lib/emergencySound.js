@@ -3,7 +3,7 @@ class EmergencySoundPlayer {
   constructor() {
     this.audio = null;
     this.isPlaying = false;
-    this.volume = 0.6; // Louder — it's an emergency
+    this.volume = 0.6; // Louder - it's an emergency
   }
 
   init() {

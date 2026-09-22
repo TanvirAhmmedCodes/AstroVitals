@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './OriStyles.css';
 
 /**
- * OriAvatar — The visual manifestation of "Ori" (Orbital Response Intelligence)
+ * OriAvatar - The visual manifestation of "Ori" (Orbital Response Intelligence)
  *
  * Designed with cute, warm, feminine NASA mission aesthetics:
  * - Rounded floating astronaut helmet
@@ -36,7 +36,7 @@ export default function OriAvatar({
       className={`relative inline-flex items-center justify-center select-none cursor-pointer transition-transform duration-300 ${
         isHovered ? 'scale-105 rotate-2' : ''
       } ${className}`}
-      title="Ori — Orbital Response Intelligence"
+      title="Ori - Orbital Response Intelligence"
     >
       {/* Ambient Radial Aura */}
       {showGlow && (

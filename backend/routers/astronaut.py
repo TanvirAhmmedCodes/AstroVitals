@@ -166,7 +166,7 @@ def list_astronauts(db: Session = Depends(get_db)):
             "total_crew": 4,
             "crew": demo_crew,
             "is_demo": True,
-            "demo_label": "Demo Crew — Register to see real data",
+            "demo_label": "Demo Crew - Register to see real data",
         }
 
     results = []
