@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useMissionStore } from '../store/useMissionStore';
+import { DEMO_SCENARIOS, generateDemoVitals, generateDemoHistory } from '../lib/demoScenarios';
 import {
   fetchLatestVitals,
   fetchVitalsHistory,
@@ -14,6 +15,7 @@ import RiskPanel from '../components/dashboard/RiskPanel';
 import AIChatPreview from '../components/dashboard/AIChatPreview';
 import NASADataPanel from '../components/dashboard/NASADataPanel';
 import ProvenanceDrawer from '../components/common/ProvenanceDrawer';
+import ESP32DeviceStatusBanner from '../components/vitals/ESP32DeviceStatusBanner';
 import { ShieldCheck, AlertTriangle } from 'lucide-react';
 
 export default function Dashboard() {
@@ -21,6 +23,8 @@ export default function Dashboard() {
   const {
     selectedAstronautId,
     selectedAstronaut,
+    operatingMode,
+    demoScenario,
     vitals,
     setVitals,
     vitalsBuffer,
@@ -31,12 +35,51 @@ export default function Dashboard() {
     setRadiation,
   } = useMissionStore();
 
-  const [isLoading, setIsLoading] = useState(true);
+  const isDemo = operatingMode === 'DEMO';
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Initial data load on mount or astronaut switch
+  // Telemetry loop: Mode-aware (Demonstration simulation vs Live Hardware)
   useEffect(() => {
     let isMounted = true;
 
+    if (isDemo) {
+      // -------------------------------------------------------------
+      // DEMONSTRATION MODE: Instant, deterministic 1 Hz simulation
+      // -------------------------------------------------------------
+      const scenario = DEMO_SCENARIOS[demoScenario] || DEMO_SCENARIOS.nominal;
+      const initialHistory = generateDemoHistory(demoScenario, 60);
+      const initialVitals = generateDemoVitals(demoScenario, 0);
+
+      setVitalsBuffer(initialHistory);
+      setVitals(initialVitals);
+      setRisk(scenario.riskScores);
+      setRadiation({
+        cumulative_dose_uSv: initialVitals.radiation_dose_uSv_cumulative,
+        cumulative_dose_mSv: initialVitals.radiation_dose_uSv_cumulative / 1000,
+        career_limit_pct: (initialVitals.radiation_dose_uSv_cumulative / 600000) * 100,
+        spe_limit_pct: (initialVitals.radiation_dose_uSv_cumulative / 250000) * 100,
+        is_in_saa: scenario.id === 'radiation_spe',
+        projected_days_to_limit: scenario.id === 'radiation_spe' ? 42 : 730,
+        data_source: scenario.datasetTitle,
+      });
+
+      let elapsedSec = 0;
+      const demoInterval = setInterval(() => {
+        if (!isMounted) return;
+        elapsedSec += 1;
+        const tickVitals = generateDemoVitals(demoScenario, elapsedSec);
+        setVitals(tickVitals);
+      }, 1000);
+
+      return () => {
+        isMounted = false;
+        clearInterval(demoInterval);
+      };
+    }
+
+    // ---------------------------------------------------------------
+    // LIVE HARDWARE MODE: Real REST, SSE & Firestore ingest
+    // ---------------------------------------------------------------
     async function loadData() {
       try {
         const [vitalsData, historyData, riskData, radData] = await Promise.all([
@@ -54,7 +97,7 @@ export default function Dashboard() {
           setIsLoading(false);
         }
       } catch (err) {
-        console.error('Error fetching dashboard telemetry:', err);
+        console.warn('Live telemetry fetch notice:', err.message);
         if (isMounted) setIsLoading(false);
       }
     }
@@ -85,7 +128,15 @@ export default function Dashboard() {
       unsubscribeSSE();
       clearInterval(interval);
     };
-  }, [selectedAstronautId, setVitals, setVitalsBuffer, setRisk, setRadiation]);
+  }, [
+    isDemo,
+    demoScenario,
+    selectedAstronautId,
+    setVitals,
+    setVitalsBuffer,
+    setRisk,
+    setRadiation,
+  ]);
 
   // Extract sparkline arrays from rolling buffer safely
   const safeBuffer = Array.isArray(vitalsBuffer) ? vitalsBuffer : [];
@@ -166,6 +217,9 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* ESP32 Wearable Telemetry & Wi-Fi / Firebase Status Banner */}
+      <ESP32DeviceStatusBanner astronautId={selectedAstronautId} deviceId="esp32-orbital-hub-01" />
 
       {/* Row 1: 4 Signature Vitals Tiles with Scroll-Snap on Mobile */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto sm:overflow-visible pb-2 sm:pb-0 snap-x snap-mandatory">

@@ -104,3 +104,4 @@ ESP32 GPIO 4  ---> [220 Ohm Resistor] ---> Anode of Red LED   ---> Cathode to GN
 2. **Inductive Flyback Clamping**: The haptic ERM motor is an inductive load. The anti-parallel 1N4148 diode prevents high-voltage inductive spikes from damaging the ESP32 GPIO transistor switch upon de-energization.
 3. **Decoupling Capacitors**: Place a 0.1 uF ceramic capacitor adjacent to the VCC pin of the MAX30102 and MLX90614 to suppress high-frequency ripple induced by the ESP32 Wi-Fi radio power amplifier bursts.
 4. **Thermal Dissipation**: In microgravity, the absence of natural air convection requires conductive heat sinking. The ESP32 thermal ground pad is routed through copper vias to prevent thermal throttling.
+

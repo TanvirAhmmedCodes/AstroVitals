@@ -90,3 +90,4 @@ For optimal biometric fidelity aboard the spacecraft:
 - **MLX90614 (IR)**: Directed toward the temporal artery on the forehead (0.5 to 1.0 cm distance) or the volar aspect of the wrist.
 - **MPU-6050 (IMU)**: Mounted securely at the dorsal center of the wearable enclosure, aligning the X-axis along the astronaut's forearm vector.
 - **SSD1306 (OLED)**: Top face of the wrist unit, tilted at 15 degrees for rapid glancing during EVA operations.
+

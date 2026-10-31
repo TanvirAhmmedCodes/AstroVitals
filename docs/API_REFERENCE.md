@@ -168,3 +168,4 @@ X-Device-Id: esp32-orbital-hub-01
 - **Method**: `GET`
 - **Path**: `/api/v1/radiation/status?astronaut_id=astronaut-A`
 - **Description**: Evaluates career effective dose (600 mSv limit), Solar Particle Event (SPE) threshold (250 mSv), and South Atlantic Anomaly (SAA) transit alerts.
+

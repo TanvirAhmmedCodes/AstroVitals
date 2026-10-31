@@ -96,3 +96,4 @@ A successful startup on COM3 produces the following log:
 [TIME] Synchronizing NTP network time with pool.ntp.org...
 [TELEMETRY] Transmitting 1 Hz batch to http://192.168.0.105:8080/api/v1/ingest/vitals
 ```
+

@@ -10,6 +10,7 @@ try:
     from services.radiation_model import RadiationModel
     from services.explainer import generate_explanation, get_countermeasure
     from services.firebase_service import sync_reading_to_firestore
+    from routers.devices import pop_pending_alert
     from limiter import limiter
 except ImportError:
     from backend.database import get_db, Telemetry, Alert, RiskSnapshot
@@ -19,6 +20,7 @@ except ImportError:
     from backend.services.radiation_model import RadiationModel
     from backend.services.explainer import generate_explanation, get_countermeasure
     from backend.services.firebase_service import sync_reading_to_firestore
+    from backend.routers.devices import pop_pending_alert
     from backend.limiter import limiter
 
 router = APIRouter(prefix="/ingest", tags=["Ingest"])
@@ -113,9 +115,17 @@ async def ingest_vitals(
 
     # Prepare SSE payload
     rad_status = RadiationModel.evaluate(latest_rad)
+    sensors_dict = getattr(latest_reading, "sensors", None) or getattr(payload, "sensors", None) or {
+        "max30102": False,
+        "mlx90614": False,
+        "mpu6050": False,
+        "ssd1306": False,
+    }
+    is_hw = getattr(latest_reading, "is_hardware_reading", False) or getattr(payload, "is_hardware", False) or False
+
     broadcast_data = {
         "astronaut_id": payload.astronaut_id,
-        "timestamp_utc": latest_reading.timestamp_utc.isoformat(),
+        "timestamp_utc": latest_reading.timestamp_utc.isoformat() if hasattr(latest_reading.timestamp_utc, "isoformat") else str(latest_reading.timestamp_utc),
         "heart_rate_bpm": latest_hr,
         "spo2_pct": latest_spo2,
         "skin_temp_c": latest_reading.skin_temp_c,
@@ -128,14 +138,24 @@ async def ingest_vitals(
         "battery_pct": latest_reading.battery_pct,
         "wifi_rssi": latest_reading.wifi_rssi,
         "is_anomaly": anomaly_detected,
+        "sensors": sensors_dict,
+        "is_hardware_reading": is_hw,
     }
 
     # Broadcast to SSE clients asynchronously
     await sse_manager.broadcast(payload.astronaut_id, broadcast_data)
 
+    # Check for pending advisory alert commands dispatched to this device/astronaut
+    advisory_alert_msg = None
+    if payload.device_id:
+        advisory_alert_msg = pop_pending_alert(payload.device_id)
+    if not advisory_alert_msg and payload.astronaut_id:
+        advisory_alert_msg = pop_pending_alert(payload.astronaut_id)
+
     # Sync latest reading to Firestore real-time layer
     try:
         reading_dict = {
+            "device_id": payload.device_id,
             "timestamp_utc": latest_reading.timestamp_utc.isoformat() if hasattr(latest_reading.timestamp_utc, "isoformat") else str(latest_reading.timestamp_utc),
             "heart_rate_bpm": latest_hr,
             "spo2_pct": latest_spo2,
@@ -147,7 +167,11 @@ async def ingest_vitals(
             "radiation_dose_uSv_cumulative": latest_rad or 0.0,
             "battery_pct": latest_reading.battery_pct if latest_reading.battery_pct is not None else 100,
             "wifi_rssi": latest_reading.wifi_rssi if latest_reading.wifi_rssi is not None else -50,
+            "wifi_ssid": getattr(latest_reading, "wifi_ssid", None) or getattr(payload, "wifi_ssid", None) or "Nominal Wi-Fi",
+            "firmware_version": getattr(payload, "firmware_version", None) or "2.1.0-orbital",
             "buffered": latest_reading.buffered or False,
+            "sensors": sensors_dict,
+            "is_hardware_reading": is_hw,
         }
         background_tasks.add_task(sync_reading_to_firestore, payload.astronaut_id, reading_dict)
     except Exception as e:
@@ -160,5 +184,6 @@ async def ingest_vitals(
         latest_heart_rate=latest_hr,
         latest_spo2=latest_spo2,
         latest_radiation_uSv=latest_rad,
+        advisory_alert=advisory_alert_msg,
         timestamp=datetime.now(timezone.utc),
     )

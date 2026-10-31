@@ -96,3 +96,4 @@ The firmware utilizes the ESP-IDF `Preferences` library under the namespace `ast
 - `astro_id`: String up to 32 bytes.
 
 Because NVS writes directly to a dedicated flash partition (`nvs`), credentials survive power cycling, brownouts, and firmware updates that do not explicitly format flash memory.
+

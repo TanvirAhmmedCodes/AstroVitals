@@ -6,6 +6,7 @@ import { useSound } from '../SoundProvider';
 import { emergencySound } from '../../lib/emergencySound';
 import { postEmergencyAlert } from '../../lib/api';
 import ISSTrackerWidget from '../cinematic/ISSTrackerWidget';
+import OperatingModeToggle from './OperatingModeToggle';
 import Modal from '../common/Modal';
 import { AlertOctagon, Shield, KeyRound, LogOut, AlertTriangle } from 'lucide-react';
 
@@ -93,8 +94,13 @@ export default function TopBar() {
           <ISSTrackerWidget />
         </div>
 
-        {/* Right Controls: Crew Selector, Emergency Button, User Status */}
+        {/* Right Controls: Mode Toggle, Crew Selector, Emergency Button, User Status */}
         <div className="flex items-center gap-3">
+          {/* Operating Mode Switcher (Live Hardware vs Demo Mode) */}
+          <div className="hidden sm:block">
+            <OperatingModeToggle />
+          </div>
+
           {/* Astronaut Selector */}
           <div className="relative flex items-center">
             <label htmlFor="astronaut-select" className="sr-only">Select Crew Member</label>

@@ -35,3 +35,6 @@ Key prompts utilized during system upgrades:
 - "Extract all mathematical, statistical, and threshold calculations into a pure, tested backend/compute module."
 - "Harmonize NASA OSDR and ESA analog human data using strict subject-level GroupKFold splitting to prevent cross-astronaut data leakage."
 - "Implement MCP server exposing tools with rigorous schema docstrings, units, and citation provenance requirements."
+- "Implement Universal Wi-Fi Manager for ESP32 with NVS Preferences persistence, 192.168.4.1 Captive Portal, and 3-second hardware BOOT button reset."
+- "Integrate Cloud Firestore real-time synchronization with FastAPI backend and React 19 frontend Web SDK on project astrovitals."
+- "Construct a Professional Demonstration Mode with 5 NASA and ESA spaceflight clinical scenarios and 1 Hz deterministic waveform generation."

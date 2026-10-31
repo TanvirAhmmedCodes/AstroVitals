@@ -276,3 +276,4 @@ export function generateDemoHistory(scenarioId = 'nominal', count = 60) {
   }
   return points;
 }
+

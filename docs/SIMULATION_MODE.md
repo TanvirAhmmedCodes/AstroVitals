@@ -85,3 +85,4 @@ const accumulatedRad = baseDose + (doseRate / 3600) * t;
 ```
 
 This math produces natural, continuous waveforms on canvas charts, sparklines, and gauges with zero backend or network dependency.
+

@@ -47,7 +47,7 @@
 #include <ArduinoJson.h>
 
 // Version & Defaults
-const char* FIRMWARE_VERSION = "2.1.0-universal-wifi";
+const char* FIRMWARE_VERSION = "2.2.0-universal-wifi";
 const char* DEFAULT_WIFI_SSID = "Anonymous";
 const char* DEFAULT_WIFI_PASS = "R0bins0nWiFi195";
 const char* DEFAULT_INGEST_URL = "https://astrovitals.onrender.com/api/v1/ingest/vitals";

@@ -106,3 +106,4 @@ AstroVitals enforces a least-privilege, defense-in-depth security model:
 2. **Device Hardware Documents**: Only assigned crew members and flight surgeons can read wearable status. Ground mission controllers can write advisory alert payloads.
 3. **Telemetry Subcollections**: Strictly append-only. Telemetry documents can never be altered or deleted once recorded, preserving forensic audit integrity.
 4. **Users Collection**: Users may only read and modify their own profile. Privilege escalation to `admin` is prevented at the rule level.
+

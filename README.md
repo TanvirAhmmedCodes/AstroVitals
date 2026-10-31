@@ -287,16 +287,19 @@ In accordance with NASA challenge guidelines, AstroVitals monitors upstream miss
 ## 13. Documentation Directory Index
 
 Detailed technical, clinical, and architectural references are maintained in the [`docs/`](docs/) directory:
-- [`docs/HARDWARE.md`](docs/HARDWARE.md): Physical ESP32 schematic, sensor physics, I2C bus wiring, haptic driver, and edge alert debounce specifications.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): End-to-end telemetry pipeline, coexistence model, and system Mermaid diagrams.
+- [`docs/HARDWARE_GUIDE.md`](docs/HARDWARE_GUIDE.md): ESP32 pinout, circuit wiring diagram, discrete components, and flight safety precautions.
+- [`docs/SENSOR_GUIDE.md`](docs/SENSOR_GUIDE.md): MAX30102, MLX90614, MPU-6050, SSD1306 specifications, I2C addresses, and edge fallbacks.
+- [`docs/ESP32_SETUP.md`](docs/ESP32_SETUP.md): PlatformIO toolchain, serial flashing sequence, and diagnostic console commands.
+- [`docs/WIFI_SETUP.md`](docs/WIFI_SETUP.md): Universal Wi-Fi manager, Captive Portal (192.168.4.1), and NVS credential persistence.
+- [`docs/FIREBASE_SETUP.md`](docs/FIREBASE_SETUP.md): Project `astrovitals` setup, collections schema, Web SDK, and security rules.
+- [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md): Complete OpenAPI reference for FastAPI endpoints, request schemas, and responses.
+- [`docs/SIMULATION_MODE.md`](docs/SIMULATION_MODE.md): Demonstration Mode architecture, mathematical models, and 5 NASA spaceflight scenarios.
+- [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md): Step-by-step diagnostic resolution for hardware, Wi-Fi, Firebase, and build errors.
+- [`docs/AI_USE.md`](docs/AI_USE.md): Formal NASA Space Apps Challenge AI disclosure detailing development tools and agent boundaries.
 - [`docs/MODEL_README.md`](docs/MODEL_README.md): Machine learning methodology, GroupKFold cross-validation matrices, and regularized linear model benchmarks.
 - [`docs/DATASET_HARMONIZATION.md`](docs/DATASET_HARMONIZATION.md): Multi-cohort harmonization pipeline uniting Inspiration4, Twin Study, HRP Bed Rest, and Concordia cohorts.
-- [`docs/ARCHITECTURE_AUDIT.md`](docs/ARCHITECTURE_AUDIT.md): Architectural spine analysis, layer boundary enforcement, and mathematical verification guarantees.
-- [`docs/AI_USE.md`](docs/AI_USE.md): Formal NASA Space Apps Challenge AI disclosure detailing development tools, in-app agent models, and human-engineered boundaries.
 - [`docs/HRP_REFERENCE.md`](docs/HRP_REFERENCE.md): NASA Human Research Program clinical risk countermeasure protocols and evidence base.
-- [`docs/REPO_AUDIT.md`](docs/REPO_AUDIT.md): Repository data provenance audit, synthetic data boundary isolation, and secret isolation verification.
-- [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md): Local environment setup, test workflows, and contribution standards.
-- [`docs/FIREBASE_ARCHITECTURE.md`](docs/FIREBASE_ARCHITECTURE.md): Real-time synchronization, Firestore schema, and authentication architecture.
-- [`docs/CONSOLIDATION_AUDIT.md`](docs/CONSOLIDATION_AUDIT.md): Repository audit matrix of consolidated files, deduplicated scripts, and single-source documentation.
 
 ---
 

@@ -16,11 +16,19 @@ class TelemetryReading(BaseModel):
     battery_pct: Optional[float] = Field(None, ge=0, le=100)
     wifi_rssi: Optional[float] = None
     buffered: Optional[bool] = False
+    wifi_ssid: Optional[str] = None
+    ip_address: Optional[str] = None
+    is_hardware_reading: Optional[bool] = False
+    sensors: Optional[Dict[str, bool]] = None
 
 
 class TelemetryIngestRequest(BaseModel):
     device_id: Optional[str] = "esp32-001"
     astronaut_id: str = "astronaut-A"
+    wifi_ssid: Optional[str] = None
+    firmware_version: Optional[str] = None
+    is_hardware: Optional[bool] = False
+    sensors: Optional[Dict[str, bool]] = None
     readings: List[TelemetryReading]
 
 

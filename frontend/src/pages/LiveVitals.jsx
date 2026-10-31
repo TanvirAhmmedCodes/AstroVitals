@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useMissionStore } from '../store/useMissionStore';
+import { DEMO_SCENARIOS, generateDemoHistory, generateDemoVitals } from '../lib/demoScenarios';
 import { fetchVitalsHistory, fetchLatestVitals } from '../lib/api';
 import { connectVitalsSSE } from '../lib/sse';
 import { useDeviceReadings } from '../hooks/useFirestore';
@@ -24,7 +25,16 @@ const WINDOWS = [
 ];
 
 export default function LiveVitals() {
-  const { selectedAstronautId, selectedAstronaut, vitals, setVitals } = useMissionStore();
+  const {
+    selectedAstronautId,
+    selectedAstronaut,
+    operatingMode,
+    demoScenario,
+    vitals,
+    setVitals,
+  } = useMissionStore();
+
+  const isDemo = operatingMode === 'DEMO';
   const [selectedWindow, setSelectedWindow] = useState('1m');
   const [telemetryLogs, setTelemetryLogs] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
@@ -35,9 +45,61 @@ export default function LiveVitals() {
   // Firestore real-time telemetry subscription (enhancement layer)
   const { data: firestoreReadings, isLive: isFirestoreLive } = useDeviceReadings(selectedAstronautId, 50);
 
-  // Sync real-time Firestore readings when available
+  // Mode-aware telemetry loader and streaming effect
   useEffect(() => {
-    if (firestoreReadings && firestoreReadings.length > 0 && !isPaused) {
+    let isMounted = true;
+    const windowDef = WINDOWS.find((w) => w.id === selectedWindow) || WINDOWS[0];
+
+    if (isDemo) {
+      // Demonstration mode: populate deterministic history and 1 Hz stream
+      const history = generateDemoHistory(demoScenario, windowDef.count);
+      setTelemetryLogs(history);
+
+      let elapsedSec = 0;
+      const interval = setInterval(() => {
+        if (!isMounted || isPaused) return;
+        elapsedSec += 1;
+        const newFrame = generateDemoVitals(demoScenario, elapsedSec);
+        setVitals(newFrame);
+        setTelemetryLogs((prev) => [newFrame, ...prev.slice(0, 99)]);
+      }, 1000);
+
+      return () => {
+        isMounted = false;
+        clearInterval(interval);
+      };
+    }
+
+    // Live Hardware mode: load REST history and connect to SSE
+    async function loadLogs() {
+      try {
+        const logs = await fetchVitalsHistory(selectedAstronautId, windowDef.count);
+        if (isMounted && logs && logs.length > 0) {
+          setTelemetryLogs((prev) => (prev.length === 0 ? logs : prev));
+        }
+      } catch (e) {
+        console.warn('Live vitals history notice:', e.message);
+      }
+    }
+
+    loadLogs();
+
+    const unsubscribe = connectVitalsSSE(selectedAstronautId, (newFrame) => {
+      if (isMounted && !isPaused && newFrame) {
+        setVitals(newFrame);
+        setTelemetryLogs((prev) => [newFrame, ...prev.slice(0, 99)]);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [isDemo, demoScenario, selectedAstronautId, selectedWindow, isPaused, setVitals]);
+
+  // Sync real-time Firestore readings when available in Live Hardware mode
+  useEffect(() => {
+    if (!isDemo && firestoreReadings && firestoreReadings.length > 0 && !isPaused) {
       const latest = firestoreReadings[0];
       setVitals({
         astronaut_id: selectedAstronautId,
@@ -75,35 +137,7 @@ export default function LiveVitals() {
           .slice(0, 100);
       });
     }
-  }, [firestoreReadings, isPaused, selectedAstronautId, setVitals]);
-
-  // Load telemetry logs on mount or astronaut switch (REST + SSE baseline fallback)
-  useEffect(() => {
-    let isMounted = true;
-    const windowDef = WINDOWS.find((w) => w.id === selectedWindow) || WINDOWS[0];
-
-    async function loadLogs() {
-      const logs = await fetchVitalsHistory(selectedAstronautId, windowDef.count);
-      if (isMounted && logs && logs.length > 0) {
-        setTelemetryLogs((prev) => (prev.length === 0 ? logs : prev));
-      }
-    }
-
-    loadLogs();
-
-    // Subscribe to SSE stream as continuous fallback
-    const unsubscribe = connectVitalsSSE(selectedAstronautId, (newFrame) => {
-      if (isMounted && !isPaused && newFrame) {
-        setVitals(newFrame);
-        setTelemetryLogs((prev) => [newFrame, ...prev.slice(0, 99)]);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      unsubscribe();
-    };
-  }, [selectedAstronautId, selectedWindow, isPaused, setVitals]);
+  }, [isDemo, firestoreReadings, isPaused, selectedAstronautId, setVitals]);
 
   // Export waveform as PNG / Snapshot
   const handleExportPNG = () => {

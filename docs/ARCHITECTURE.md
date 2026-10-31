@@ -123,3 +123,4 @@ To ensure clinical trustworthiness, AstroVitals enforces a strict architectural 
 - **Client-Side Security**: React 19 single-page application never makes direct unauthenticated writes to Firestore.
 - **Firebase Security Rules**: Authored under `firestore.rules` with default-deny semantics, astronaut-scoped read permissions, and immutable append-only telemetry subcollections.
 - **Backend Secrets**: API credentials and service account certificates remain strictly in environment variables (`.env`). No secrets are committed to version control.
+

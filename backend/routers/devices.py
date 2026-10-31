@@ -194,19 +194,119 @@ class DeviceAlertCommand(BaseModel):
     display_message: str = Field("GROUND COMMAND ALERT", description="HUD alert text to render on SSD1306")
 
 
+# In-memory alert dispatch buffer for low-latency delivery to ESP32 wearables
+_pending_device_alerts: Dict[str, Dict[str, Any]] = {}
+
+
+def queue_device_alert(device_id: str, alert_data: Dict[str, Any]):
+    """Queue an alert command for an ESP32 hardware device."""
+    _pending_device_alerts[device_id] = alert_data
+
+
+def pop_pending_alert(device_id: str) -> Optional[str]:
+    """Retrieve and clear any pending advisory alert for the device."""
+    alert = _pending_device_alerts.pop(device_id, None)
+    if alert:
+        return alert.get("display_message") or "GROUND COMMAND ALERT"
+    return None
+
+
 @router.post("/alert")
 def send_device_alert(
     command: DeviceAlertCommand,
     current_user: User = Depends(get_current_user),
 ):
     """Dispatch an advisory haptic and LED alert command to an astronaut wearable device."""
-    return {
-        "status": "dispatched",
+    alert_data = {
         "device_id": command.device_id,
         "alert_level": command.alert_level,
         "haptic_pattern": command.haptic_pattern,
         "display_message": command.display_message,
         "dispatched_by": current_user.email,
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+    }
+    queue_device_alert(command.device_id, alert_data)
+
+    # Also notify via Firestore if available
+    fs_db = get_firestore_db()
+    if fs_db is not None:
+        try:
+            fs_db.collection("devices").document(command.device_id).set({
+                "pending_alert": alert_data,
+                "last_alert_at": alert_data["timestamp_utc"],
+            }, merge=True)
+        except Exception as e:
+            print(f"[Devices] Warning updating pending alert in Firestore: {e}")
+
+    return {
+        "status": "dispatched",
+        **alert_data,
+    }
+
+
+@router.get("/{device_id}/pending-alert")
+def get_pending_alert(device_id: str):
+    """Endpoint for ESP32 devices to poll for pending ground command alerts."""
+    msg = pop_pending_alert(device_id)
+    return {
+        "device_id": device_id,
+        "has_alert": msg is not None,
+        "advisory_alert": msg,
+    }
+
+
+@router.get("/{device_id}/status")
+def get_device_status(device_id: str):
+    """Retrieve status, battery, and Wi-Fi telemetry for an ESP32 wearable unit."""
+    fs_db = get_firestore_db()
+    if fs_db is not None:
+        try:
+            doc = fs_db.collection("devices").document(device_id).get()
+            if doc.exists:
+                data = doc.to_dict()
+                # Compute live heartbeat freshness watchdog (within last 25 seconds)
+                is_connected = False
+                last_seen_str = data.get("last_seen")
+                if last_seen_str:
+                    try:
+                        last_seen_dt = datetime.fromisoformat(last_seen_str.replace("Z", "+00:00"))
+                        now_dt = datetime.now(timezone.utc)
+                        delta_sec = (now_dt - last_seen_dt).total_seconds()
+                        is_connected = (delta_sec <= 25.0)
+                    except Exception:
+                        pass
+
+                data["is_connected"] = is_connected
+                if not is_connected and data.get("status") == "online":
+                    data["status"] = "offline"
+
+                if "sensors" not in data:
+                    data["sensors"] = {
+                        "max30102": False,
+                        "mlx90614": False,
+                        "mpu6050": False,
+                        "ssd1306": False,
+                    }
+                return data
+        except Exception as e:
+            print(f"[Devices] Error reading status from Firestore: {e}")
+
+    # Fallback status
+    return {
+        "device_id": device_id,
+        "status": "standby",
+        "is_connected": False,
+        "last_seen": datetime.now(timezone.utc).isoformat(),
+        "battery_pct": 98.0,
+        "wifi_rssi": -48.0,
+        "wifi_ssid": "Nominal Wi-Fi",
+        "firmware_version": "2.1.0-orbital",
+        "sensors": {
+            "max30102": False,
+            "mlx90614": False,
+            "mpu6050": False,
+            "ssd1306": False,
+        },
+        "is_hardware_reading": False,
     }
 

@@ -33,7 +33,7 @@ print("To trigger it:")
 print("  1. Press and HOLD the 'BOOT' button.")
 print("  2. TAP the 'EN' (or 'RST') button once.")
 print("  3. RELEASE the 'BOOT' button.")
-print("\nListening on COM3 for 60 seconds...\n")
+print("\nListening on COM3 for 90 seconds...\n")
 
 detected = False
 try:
@@ -43,7 +43,7 @@ except Exception as e:
     sys.exit(1)
 
 t_start = time.time()
-while time.time() - t_start < 60:
+while time.time() - t_start < 90:
     raw = ser.readline()
     if raw:
         line = raw.decode("utf-8", errors="replace").strip()
@@ -53,13 +53,13 @@ while time.time() - t_start < 60:
             break
         elif "boot:0x13" in line:
             print("[INFO] Normal boot detected. Remember to hold BOOT while tapping EN.")
-        elif len(line) > 0 and ("AGRO" in line or "WiFi" in line):
-            print(f"[INFO] Chip running: {line[:40]}...")
+        elif len(line) > 0 and ("AGRO" in line or "WiFi" in line or "Astro" in line or "SYSTEM" in line):
+            print(f"[INFO] Chip running: {line[:50]}...")
 
 ser.close()
 
 if not detected:
-    print("\n[TIMEOUT] Download mode not detected within 60 seconds.")
+    print("\n[TIMEOUT] Download mode not detected within 90 seconds.")
     print("You can run this anytime by executing in PowerShell:")
     print("  python scripts/auto_flash.py")
     sys.exit(1)
@@ -94,6 +94,26 @@ if res.returncode == 0:
     print("\n==========================================================")
     print("  SUCCESS! ASTROVITALS FIRMWARE FLASHED TO ESP32!")
     print("==========================================================")
-    print("Tap the EN/RST button once to boot AstroVitals v2.1.0.")
-sys.exit(res.returncode)
+    print("Tap the EN/RST button once if automatic reboot does not occur.")
+    print("Monitoring COM3 for boot logs (12 seconds)...")
+    time.sleep(1.0)
+    try:
+        ser = serial.Serial("COM3", 115200, timeout=0.2)
+        ser.dtr = False
+        ser.rts = True
+        time.sleep(0.1)
+        ser.rts = False
+        print("\n--- ESP32 LIVE SERIAL BOOT LOGS ---")
+        t_boot = time.time()
+        while time.time() - t_boot < 12:
+            raw = ser.readline()
+            if raw:
+                line = raw.decode("utf-8", errors="replace").strip()
+                if line:
+                    print(f"[ESP32] {line}")
+        ser.close()
+    except Exception as e:
+        print(f"[SERIAL] Notice: {e}")
+    sys.exit(0)
 
+sys.exit(res.returncode)

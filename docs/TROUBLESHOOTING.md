@@ -96,3 +96,4 @@ Team Orbitrix, Dhaka, Bangladesh. Licensed under the Apache License 2.0.
 - **Root Cause**: Physical ESP32 hardware is disconnected or turned off, and the 25-second freshness watchdog marked the link as offline.
 - **Resolution**:
   - If demonstrating without hardware, click the **DEMO MODE** button in the top navigation bar or the orange banner to activate the scientific simulation engine.
+

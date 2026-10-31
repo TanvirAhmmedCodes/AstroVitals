@@ -1,8 +1,82 @@
 import { create } from 'zustand';
+import { DEMO_SCENARIOS, generateDemoVitals, generateDemoHistory } from '../lib/demoScenarios';
+
+const initialMode = typeof window !== 'undefined'
+  ? localStorage.getItem('astrovitals_operating_mode') || 'DEMO'
+  : 'DEMO';
+
+const initialScenario = typeof window !== 'undefined'
+  ? localStorage.getItem('astrovitals_demo_scenario') || 'nominal'
+  : 'nominal';
 
 export const useMissionStore = create((set, get) => ({
+  // Operating Modes: 'LIVE' or 'DEMO'
+  operatingMode: initialMode,
+  isDemoMode: initialMode === 'DEMO',
+  demoScenario: initialScenario,
+
+  setOperatingMode: (mode) => {
+    const isDemo = mode === 'DEMO';
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('astrovitals_operating_mode', mode);
+    }
+    set({
+      operatingMode: mode,
+      isDemoMode: isDemo,
+    });
+    if (isDemo) {
+      const scenario = DEMO_SCENARIOS[get().demoScenario] || DEMO_SCENARIOS.nominal;
+      const demoV = generateDemoVitals(scenario.id, 0);
+      const demoHist = generateDemoHistory(scenario.id, 60);
+      set({
+        vitals: demoV,
+        vitalsBuffer: demoHist,
+        risk: { ...get().risk, ...scenario.riskScores },
+      });
+    }
+  },
+
+  setDemoScenario: (scenarioId) => {
+    const scenario = DEMO_SCENARIOS[scenarioId] || DEMO_SCENARIOS.nominal;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('astrovitals_demo_scenario', scenarioId);
+    }
+    const demoV = generateDemoVitals(scenario.id, 0);
+    const demoHist = generateDemoHistory(scenario.id, 60);
+    set({
+      demoScenario: scenarioId,
+      vitals: demoV,
+      vitalsBuffer: demoHist,
+      risk: { ...get().risk, ...scenario.riskScores },
+    });
+  },
+
+  // Hardware Status State
+  hardwareStatus: {
+    isConnected: false,
+    lastSeen: null,
+    deviceId: 'astronaut-A',
+    wifiSSID: 'Anonymous',
+    wifiRSSI: -56,
+    ipAddress: '192.168.0.105',
+    batteryPct: 98,
+    firmwareVersion: '2.1.0-universal-wifi',
+    sensors: {
+      max30102: false,
+      mlx90614: false,
+      mpu6050: false,
+      ssd1306: false,
+    },
+    isHardwareReading: false,
+  },
+
+  setHardwareStatus: (newStatus) => {
+    set({
+      hardwareStatus: { ...get().hardwareStatus, ...newStatus },
+    });
+  },
+
   // Active Crew Member
-  isDemoMode: false,
   selectedAstronautId: 'astronaut-A',
   selectedAstronaut: {
     id: 'astronaut-A',
