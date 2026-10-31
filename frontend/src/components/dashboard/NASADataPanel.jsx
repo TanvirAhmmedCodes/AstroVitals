@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Database, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Database, ExternalLink } from 'lucide-react';
 import Modal from '../common/Modal';
 
 export default function NASADataPanel() {

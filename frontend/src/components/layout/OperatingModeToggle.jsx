@@ -11,7 +11,7 @@
 import React from 'react';
 import { useMissionStore } from '../../store/useMissionStore';
 import { DEMO_SCENARIOS } from '../../lib/demoScenarios';
-import { Cpu, Sparkles, ChevronDown, Radio } from 'lucide-react';
+import { Cpu, Sparkles, Radio } from 'lucide-react';
 
 export default function OperatingModeToggle() {
   const {
@@ -31,8 +31,6 @@ export default function OperatingModeToggle() {
       setOperatingMode(mode);
     }
   };
-
-  const currentScenarioObj = DEMO_SCENARIOS[demoScenario] || DEMO_SCENARIOS.nominal;
 
   return (
     <div className="flex items-center gap-2 select-none">

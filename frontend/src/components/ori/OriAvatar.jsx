@@ -34,7 +34,6 @@ export default function OriAvatar({
   // Scaled dimensions
   const dim = typeof size === 'number' ? size : parseInt(size, 10) || 64;
   const isSmall = dim <= 28;
-  const isMedium = dim > 28 && dim <= 48;
   const isLarge = dim > 48;
 
   // Resolve dynamic avatar expression image

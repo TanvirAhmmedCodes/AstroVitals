@@ -55,7 +55,7 @@ export default function ESP32DeviceStatusBanner({
     wifi_ssid: 'Anonymous',
     wifi_rssi: -56,
     battery_pct: 98,
-    firmware_version: '2.1.0-universal-wifi',
+    firmware_version: '2.2.0-universal-wifi',
     ip_address: '192.168.0.105',
     last_seen: new Date().toISOString(),
     sensors: {

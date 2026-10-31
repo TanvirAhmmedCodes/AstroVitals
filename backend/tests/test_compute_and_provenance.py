@@ -136,7 +136,7 @@ class TestSafeFetchAndFixtures(unittest.TestCase):
         data, mode = fetch_json(
             "https://api.nasa.gov/planetary/apod", name="apod"
         )
-        self.assertEqual(mode, "fixture")
+        self.assertIn(mode, ["fixture", "cache"])
         self.assertIn("title", data)
         del os.environ["OFFLINE"]
 

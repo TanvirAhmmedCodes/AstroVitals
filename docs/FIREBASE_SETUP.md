@@ -32,7 +32,7 @@ firestore/
 │   ├── wifi_ssid: string ("Anonymous")
 │   ├── wifi_rssi: number (-56.0)
 │   ├── battery_pct: number (98.0)
-│   ├── firmware_version: string ("2.1.0-universal-wifi")
+│   ├── firmware_version: string ("2.2.0-universal-wifi")
 │   ├── ip_address: string ("192.168.0.105")
 │   ├── is_hardware_reading: boolean (true | false)
 │   ├── sensors: map

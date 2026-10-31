@@ -36,7 +36,7 @@ X-Device-Id: esp32-orbital-hub-01
   "device_id": "esp32-orbital-hub-01",
   "astronaut_id": "astronaut-A",
   "wifi_ssid": "Anonymous",
-  "firmware_version": "2.1.0-universal-wifi",
+  "firmware_version": "2.2.0-universal-wifi",
   "is_hardware": false,
   "sensors": {
     "max30102": false,
@@ -101,7 +101,7 @@ X-Device-Id: esp32-orbital-hub-01
   "battery_pct": 98.0,
   "wifi_rssi": -56.0,
   "wifi_ssid": "Anonymous",
-  "firmware_version": "2.1.0-universal-wifi",
+  "firmware_version": "2.2.0-universal-wifi",
   "sensors": {
     "max30102": false,
     "mlx90614": false,

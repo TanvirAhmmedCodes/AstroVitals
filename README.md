@@ -137,7 +137,7 @@ AstroVitals is integrated with a physical wearable hardware hub based on the Esp
 - **Hybrid Radiation Monitoring**: Combines real-time NOAA SWPC solar X-ray flux and storm scales with committed spaceflight analog fixtures (`demo_fixtures/radspace_weather.json`) and NASA-STD-3001 cumulative career limits (600 mSv career, 250 mSv SPE).
 
 Complete schematic, circuit protection, and pin mapping are documented in [`docs/HARDWARE.md`](docs/HARDWARE.md).  
-Firmware source code: [`firmware/astrovitals_esp32.ino`](firmware/astrovitals_esp32.ino).
+Firmware source code: PlatformIO [`firmware/src/main.cpp`](firmware/src/main.cpp) and Arduino IDE [`firmware/astrovitals_esp32.ino`](firmware/astrovitals_esp32.ino) (v2.2.0-universal-wifi).
 
 ---
 
