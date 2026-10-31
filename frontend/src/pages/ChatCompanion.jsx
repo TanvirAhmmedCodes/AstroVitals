@@ -48,7 +48,7 @@ export default function ChatCompanion() {
       {
         id: 'initial-1',
         role: 'assistant',
-        content: `Hi ${firstName}! I'm **Ori** - your mission AI companion. Telemetry indicates your heart rate is nominal at ${vitals?.heart_rate_bpm || 72} BPM, SpO2 is ${vitals?.spo2_pct || 98}%, and circadian recovery is balanced. How can I assist your mission duties or wellness today?`,
+        content: `Welcome back, ${firstName}! Your telemetry is holding steady with heart rate at ${vitals?.heart_rate_bpm || 72} BPM, SpO2 at ${vitals?.spo2_pct || 98}%, and balanced recovery scores. What would you like to explore or check on today?`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       },
     ];
@@ -228,7 +228,12 @@ export default function ChatCompanion() {
         {/* Chat Header Bar */}
         <div className="p-4 border-b border-white/10 flex items-center justify-between bg-[#070B14]/80">
           <div className="flex items-center gap-3">
-            <OriAvatar size={42} showGlow={true} />
+            <OriAvatar
+              size={42}
+              showGlow={true}
+              isListening={isListening}
+              isThinking={loading}
+            />
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="font-hud text-sm font-bold tracking-wider text-[#E8EDF5]">
@@ -379,7 +384,7 @@ export default function ChatCompanion() {
 
           {loading && (
             <div className="flex gap-3 items-center text-xs font-mono text-[#00D4FF]">
-              <OriAvatar size={30} showGlow={false} isSpeaking={true} />
+              <OriAvatar size={30} showGlow={false} isThinking={true} />
               <span className="animate-pulse">Ori is formulating mission guidance...</span>
             </div>
           )}

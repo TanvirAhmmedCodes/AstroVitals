@@ -59,7 +59,7 @@ export default function OriChatDrawer() {
       {
         id: 'ori-intro',
         role: 'assistant',
-        content: `Hi ${firstName}! I'm **Ori**, your orbital companion. I'm actively monitoring your telemetry-heart rate is ${vitals?.heart_rate_bpm || 72} BPM and SpO2 is ${vitals?.spo2_pct || 98}%. How are you feeling right now?`,
+        content: `Welcome back, ${firstName}! Your telemetry is looking steady with heart rate at ${vitals?.heart_rate_bpm || 72} BPM and SpO2 at ${vitals?.spo2_pct || 98}%. How are you feeling right now?`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       },
     ];
@@ -245,7 +245,13 @@ export default function OriChatDrawer() {
                   <ArrowLeft size={18} />
                 </button>
 
-                <OriAvatar size={40} isSpeaking={isSpeaking} showGlow={false} />
+                <OriAvatar
+                  size={40}
+                  isSpeaking={isSpeaking}
+                  isListening={isListening}
+                  isThinking={loading}
+                  showGlow={false}
+                />
 
                 <div>
                   <div className="flex items-center gap-1.5">
@@ -376,10 +382,8 @@ export default function OriChatDrawer() {
 
               {/* Animated Typing Indicator */}
               {loading && (
-                <div className="flex items-center gap-2 text-xs font-mono text-[#00D4FF]">
-                  <div className="w-6 h-6 rounded-full bg-[#00D4FF]/20 flex items-center justify-center">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#00D4FF] animate-ping" />
-                  </div>
+                <div className="flex items-center gap-2.5 text-xs font-mono text-[#00D4FF]">
+                  <OriAvatar size={24} isThinking={true} showGlow={false} />
                   <span className="italic">Ori is formulating response...</span>
                 </div>
               )}

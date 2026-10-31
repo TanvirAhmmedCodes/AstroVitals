@@ -136,28 +136,53 @@ class GeminiService:
             return "No previous messages in this session."
         lines = []
         for msg in history[-6:]:  # Keep last 6 exchanges for context
-            role = "Astronaut" if msg.get("role") in ["user", "astronaut"] else "AstroVitals"
+            role = "Astronaut" if msg.get("role") in ["user", "astronaut"] else "Ori"
             lines.append(f"{role}: {msg.get('content', '')}")
         return "\n".join(lines)
 
     def _offline_fallback(self, message: str, context: Optional[Dict[str, Any]]) -> str:
-        """Compassionate autonomous medical companion fallback if API is unreachable."""
+        """Intelligent autonomous medical companion fallback if API is unreachable."""
         vitals = (context or {}).get("current_vitals", {})
         hr = vitals.get("heart_rate_bpm", 72.0)
+        spo2 = vitals.get("spo2_pct", 98.0)
+        temp = vitals.get("skin_temp_c", 36.5)
         is_anom = vitals.get("is_anomaly", False)
         raw_name = (context or {}).get("astronaut_name", "Explorer")
         first_name = raw_name.split()[0] if raw_name else "Explorer"
 
-        if is_anom or (hr and hr > 120):
+        msg_lower = message.lower().strip()
+
+        # 1. Identity inquiry (only introduce when asked)
+        if any(q in msg_lower for q in ["who are you", "what are you", "your name", "introduce yourself"]):
             return (
-                f"Hi {first_name}! I'm Ori. I'm observing slightly elevated heart rate readings right now ({hr} BPM). "
-                "Let's pause physical exertion together and take slow 4-7-8 calming breaths. Sip 500mL of electrolyte water. "
-                "I'm keeping watch over your telemetry and will remain right beside you. Would you like me to guide a breathing exercise?"
+                f"I'm Ori, your onboard AstroVitals mission companion. I keep watch over your physiological telemetry, "
+                "help monitor cardiovascular and circadian health in microgravity, and keep you company out here in orbit."
             )
+
+        # 2. Greeting / casual check-in
+        if any(msg_lower.startswith(g) for g in ["hi", "hello", "hey", "good morning", "good evening", "howdy", "sup"]):
+            status_text = f"telemetry is nominal with heart rate at {hr} BPM and SpO2 at {spo2}%" if not is_anom else f"heart rate is elevated at {hr} BPM"
+            return f"Good to hear from you, {first_name}! Your {status_text}. What's on your mind today?"
+
+        # 3. Anomaly or distress / fatigue
+        if is_anom or (hr and hr > 115) or any(w in msg_lower for w in ["tired", "exhausted", "dizzy", "stress", "fatigue", "headache", "chest"]):
+            return (
+                f"I'm seeing elevated readings right now with your heart rate at {hr} BPM. "
+                "Let's pause active tasks for a moment, take slow deep breaths, and drink 500 mL of electrolyte water. "
+                "If the dizziness or fatigue persists, please notify your flight surgeon immediately."
+            )
+
+        # 4. Telemetry / vitals inquiry
+        if any(w in msg_lower for w in ["vitals", "heart rate", "spo2", "telemetry", "status", "health", "how am i"]):
+            return (
+                f"Here is your current status: heart rate is {hr} BPM, oxygen saturation is {spo2}%, "
+                f"and skin temperature is {temp} C. All metrics are nominal for microgravity operations."
+            )
+
+        # 5. General fallback
         return (
-            f"Hi {first_name}! I'm Ori. Your telemetry is looking nominal and steady right now with a resting heart rate of {hr} BPM. "
-            "Your cognitive score and recovery metrics look well-balanced for today's mission schedule. "
-            "Remember to hydrate and take a gentle 5-minute breather before your next orbital task. How can I help you feel your best today?"
+            f"Your current telemetry is holding steady with heart rate at {hr} BPM and SpO2 at {spo2}%. "
+            f"I'm right here monitoring the flight systems with you, {first_name}."
         )
 
 
