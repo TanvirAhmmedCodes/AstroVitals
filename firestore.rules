@@ -1,0 +1,345 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// This security rules file assumes the following data structures:
+//
+// Collection: users
+// Document ID: {userId} (matches Firebase Auth UID)
+// Fields:
+//   - id: string (required, 1-64 chars, immutable, matches document ID)
+//   - email: string (required, 5-100 chars, valid email format, immutable for non-admin)
+//   - full_name: string (required, 1-100 chars)
+//   - role: string (required, enum: admin, flight_surgeon, astronaut, observer; immutable for non-admin)
+//   - created_at: string or timestamp (required, immutable)
+//   - updated_at: string or timestamp (optional)
+//
+// Collection: devices
+// Document ID: {deviceId} (hardware identifier, e.g. ESP32-BIO-001)
+// Fields:
+//   - device_id: string (required, 3-64 chars, immutable, matches document ID)
+//   - device_name: string (optional, 1-64 chars)
+//   - owner_user_id: string (optional, 1-64 chars, astronaut user UID, immutable for non-admin)
+//   - owner_astronaut_id: string (optional, 1-64 chars, astronaut identifier, immutable for non-admin)
+//   - owner_astronaut_name: string (optional, 1-64 chars)
+//   - firmware_version: string (optional, 1-32 chars)
+//   - status: string (required, enum: online, offline, standby, calibrating, error)
+//   - battery_pct: number (required, 0-100)
+//   - wifi_rssi: number (required, -120 to 0)
+//   - wifi_ssid: string (optional, 1-64 chars)
+//   - registered_at: string or timestamp (optional)
+//   - paired_at: string or timestamp (optional)
+//   - unregistered_at: string or timestamp (optional)
+//   - last_seen: string or timestamp (required)
+//   - ip_address: string (optional, 7-45 chars)
+//   - pending_alert: map (optional, alert payload dispatched to device)
+//   - last_alert_at: string or timestamp (optional)
+//
+// Subcollection: devices/{deviceId}/readings
+// Document ID: {readingId} (auto-generated ID)
+// Fields:
+//   - timestamp: string or timestamp (required, chronological reading time)
+//   - heart_rate_bpm: number (required, 30-250 BPM physiological safety range)
+//   - spo2_pct: number (required, 50-100 percent oxygen saturation)
+//   - skin_temp_c: number (required, 25-45 degrees Celsius)
+//   - accel_x_g: number (optional, -20.0 to 20.0 Gs)
+//   - accel_y_g: number (optional, -20.0 to 20.0 Gs)
+//   - accel_z_g: number (optional, -20.0 to 20.0 Gs)
+//   - activity_state: string (optional, enum: rest, nominal, active, exercise, eva, sleep, stress)
+//   - radiation_dose_uSv_cumulative: number (optional, >= 0.0 cumulative microSieverts)
+//   - buffered: bool (optional, whether telemetry was held in offline ESP32 ring buffer)
+//   - device_id: string (optional, 1-64 chars)
+//
+// Collection: mission
+// Document ID: current (singleton document for active expedition)
+// Fields:
+//   - crew: list of maps (required, max 20 astronaut entries)
+//   - updated_at: string or timestamp (required)
+//   - mission_name: string (optional, 1-100 chars)
+//   - expedition: string (optional, 1-50 chars)
+//   - status: string (optional, 1-50 chars)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -----------------------------------------------------------
+    // Default Deny Rule
+    // -----------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ===========================================================
+    // Helper Functions
+    // ===========================================================
+
+    // Check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Verify whether the caller is a system administrator.
+    // Authority is derived strictly from Firebase Auth token custom claims
+    // or the verified bootstrap administrator email address.
+    function isAdmin() {
+      return isAuthenticated() && (
+        (request.auth.token.get('admin', false) == true) ||
+        (request.auth.token.get('role', '') == 'admin') ||
+        (
+          request.auth.token.get('email', '').lower() == 'tanvirahmmed13579@gmail.com' &&
+          request.auth.token.get('email_verified', false) == true
+        )
+      );
+    }
+
+    // Check if the authenticated user owns the document by matching UID
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if user owns the hardware device or is transmitting with a device token
+    function isDeviceOwner(deviceData) {
+      return isAuthenticated() && (
+        (deviceData.get('owner_user_id', '') == request.auth.uid) ||
+        (deviceData.get('owner_astronaut_id', '') == request.auth.uid) ||
+        (request.auth.token.get('device_id', '') == deviceData.get('device_id', ''))
+      );
+    }
+
+    // Ensure device ownership fields cannot be hijacked on update
+    function areDeviceImmutableFieldsUnchanged() {
+      return (
+        (!('owner_user_id' in resource.data) ||
+         request.resource.data.get('owner_user_id', '') == resource.data.owner_user_id) &&
+        (!('owner_astronaut_id' in resource.data) ||
+         request.resource.data.get('owner_astronaut_id', '') == resource.data.owner_astronaut_id)
+      );
+    }
+
+    // Validate email format and bounded length
+    function isValidEmail(email) {
+      return email is string &&
+        email.size() >= 5 &&
+        email.size() <= 100 &&
+        email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    // Validate timestamp: accepts Firestore timestamp or standard ISO 8601 string
+    function isValidTimestamp(val) {
+      return val is timestamp ||
+        (
+          val is string &&
+          val.size() >= 10 &&
+          val.size() <= 40 &&
+          val.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}.*')
+        );
+    }
+
+    // Validate optional bounded string
+    function validOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+        (
+          request.resource.data[field] is string &&
+          request.resource.data[field].size() >= minLen &&
+          request.resource.data[field].size() <= maxLen
+        );
+    }
+
+    // ===========================================================
+    // Domain Validators (Applied to both create and update)
+    // ===========================================================
+
+    // Domain validator for users collection
+    function isValidUser(data) {
+      return data.keys().hasOnly(['id', 'email', 'full_name', 'role', 'created_at', 'updated_at']) &&
+        data.keys().hasAll(['id', 'email', 'full_name', 'role', 'created_at']) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 64 &&
+        isValidEmail(data.email) &&
+        data.full_name is string && data.full_name.size() >= 1 && data.full_name.size() <= 100 &&
+        data.role is string && (data.role in ['admin', 'flight_surgeon', 'astronaut', 'observer']) &&
+        isValidTimestamp(data.created_at) &&
+        (!('updated_at' in data) || isValidTimestamp(data.updated_at));
+    }
+
+    // Nested alert payload validator for devices collection
+    function isValidPendingAlert(alertMap) {
+      return alertMap is map &&
+        alertMap.keys().hasOnly(['device_id', 'alert_level', 'haptic_pattern', 'display_message', 'dispatched_by', 'timestamp_utc']) &&
+        (!('device_id' in alertMap) || (alertMap.device_id is string && alertMap.device_id.size() <= 64)) &&
+        (!('alert_level' in alertMap) || (alertMap.alert_level is string && alertMap.alert_level in ['nominal', 'caution', 'warning', 'critical'])) &&
+        (!('haptic_pattern' in alertMap) || (alertMap.haptic_pattern is string && alertMap.haptic_pattern.size() <= 32)) &&
+        (!('display_message' in alertMap) || (alertMap.display_message is string && alertMap.display_message.size() <= 128)) &&
+        (!('dispatched_by' in alertMap) || (alertMap.dispatched_by is string && alertMap.dispatched_by.size() <= 100)) &&
+        (!('timestamp_utc' in alertMap) || isValidTimestamp(alertMap.timestamp_utc));
+    }
+
+    // Domain validator for devices collection
+    function isValidDevice(data) {
+      return data.keys().hasOnly([
+          'device_id', 'device_name', 'owner_user_id', 'owner_astronaut_id',
+          'owner_astronaut_name', 'firmware_version', 'status', 'battery_pct',
+          'wifi_rssi', 'wifi_ssid', 'registered_at', 'paired_at',
+          'unregistered_at', 'last_seen', 'ip_address', 'pending_alert',
+          'last_alert_at'
+        ]) &&
+        data.keys().hasAll(['device_id', 'status', 'battery_pct', 'wifi_rssi', 'last_seen']) &&
+        data.device_id is string && data.device_id.size() >= 3 && data.device_id.size() <= 64 &&
+        data.status is string && (data.status in ['online', 'offline', 'standby', 'calibrating', 'error']) &&
+        data.battery_pct is number && data.battery_pct >= 0 && data.battery_pct <= 100 &&
+        data.wifi_rssi is number && data.wifi_rssi >= -120 && data.wifi_rssi <= 0 &&
+        isValidTimestamp(data.last_seen) &&
+        validOptionalString('device_name', 1, 64) &&
+        validOptionalString('owner_user_id', 1, 64) &&
+        validOptionalString('owner_astronaut_id', 1, 64) &&
+        validOptionalString('owner_astronaut_name', 1, 64) &&
+        validOptionalString('firmware_version', 1, 32) &&
+        validOptionalString('wifi_ssid', 1, 64) &&
+        validOptionalString('ip_address', 7, 45) &&
+        (!('registered_at' in data) || isValidTimestamp(data.registered_at)) &&
+        (!('paired_at' in data) || isValidTimestamp(data.paired_at)) &&
+        (!('unregistered_at' in data) || isValidTimestamp(data.unregistered_at)) &&
+        (!('last_alert_at' in data) || isValidTimestamp(data.last_alert_at)) &&
+        (!('pending_alert' in data) || isValidPendingAlert(data.pending_alert));
+    }
+
+    // Domain validator for biometric telemetry readings
+    function isValidReading(data) {
+      return data.keys().hasOnly([
+          'timestamp', 'heart_rate_bpm', 'spo2_pct', 'skin_temp_c',
+          'accel_x_g', 'accel_y_g', 'accel_z_g', 'activity_state',
+          'radiation_dose_uSv_cumulative', 'buffered', 'device_id'
+        ]) &&
+        data.keys().hasAll(['timestamp', 'heart_rate_bpm', 'spo2_pct', 'skin_temp_c']) &&
+        isValidTimestamp(data.timestamp) &&
+        // Physiological safety envelope constraints:
+        // Heart rate: 30-250 BPM
+        data.heart_rate_bpm is number && data.heart_rate_bpm >= 30 && data.heart_rate_bpm <= 250 &&
+        // Blood oxygen saturation: 50-100%
+        data.spo2_pct is number && data.spo2_pct >= 50 && data.spo2_pct <= 100 &&
+        // Skin temperature: 25-45 degrees C
+        data.skin_temp_c is number && data.skin_temp_c >= 25 && data.skin_temp_c <= 45 &&
+        (!('accel_x_g' in data) || (data.accel_x_g is number && data.accel_x_g >= -20 && data.accel_x_g <= 20)) &&
+        (!('accel_y_g' in data) || (data.accel_y_g is number && data.accel_y_g >= -20 && data.accel_y_g <= 20)) &&
+        (!('accel_z_g' in data) || (data.accel_z_g is number && data.accel_z_g >= -20 && data.accel_z_g <= 20)) &&
+        (!('activity_state' in data) || (data.activity_state is string && data.activity_state in ['rest', 'nominal', 'active', 'exercise', 'eva', 'sleep', 'stress'])) &&
+        (!('radiation_dose_uSv_cumulative' in data) || (data.radiation_dose_uSv_cumulative is number && data.radiation_dose_uSv_cumulative >= 0 && data.radiation_dose_uSv_cumulative <= 10000000)) &&
+        (!('buffered' in data) || data.buffered is bool) &&
+        (!('device_id' in data) || (data.device_id is string && data.device_id.size() <= 64));
+    }
+
+    // Domain validator for mission manifest document
+    function isValidMission(data) {
+      return data.keys().hasOnly(['crew', 'updated_at', 'mission_name', 'expedition', 'status']) &&
+        data.keys().hasAll(['crew', 'updated_at']) &&
+        data.crew is list && data.crew.size() <= 20 &&
+        isValidTimestamp(data.updated_at) &&
+        validOptionalString('mission_name', 1, 100) &&
+        validOptionalString('expedition', 1, 50) &&
+        validOptionalString('status', 1, 50);
+    }
+
+    // ===========================================================
+    // Collection Match Rules
+    // ===========================================================
+
+    // 1. users/{userId}
+    // Accounts and user profile metadata
+    match /users/{userId} {
+      // Authenticated users can read their own profile; Admins can read all profiles
+      allow get: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+
+      // Users can register their own document with default observer role; Admins can create any user
+      allow create: if isAuthenticated() &&
+        isValidUser(request.resource.data) &&
+        request.resource.data.id == userId &&
+        (
+          isAdmin() ||
+          (
+            isOwner(userId) &&
+            request.resource.data.role == 'observer' &&
+            request.resource.data.email == request.auth.token.email
+          )
+        );
+
+      // Non-admin users can update their non-privileged profile fields; Admins have full access
+      allow update: if isAuthenticated() &&
+        isValidUser(request.resource.data) &&
+        (
+          (isAdmin() && request.resource.data.id == resource.data.id) ||
+          (
+            isOwner(userId) &&
+            request.resource.data.id == resource.data.id &&
+            request.resource.data.email == resource.data.email &&
+            request.resource.data.role == resource.data.role &&
+            request.resource.data.created_at == resource.data.created_at
+          )
+        );
+
+      // Only administrators can delete user accounts
+      allow delete: if isAdmin();
+    }
+
+    // 2. devices/{deviceId}
+    // ESP32 telemetry hardware unit status
+    match /devices/{deviceId} {
+      // Authenticated astronauts, flight surgeons, and observers can read device status
+      allow read: if isAuthenticated();
+
+      // Admins and authenticated device owners can create device status records
+      allow create: if isAuthenticated() &&
+        isValidDevice(request.resource.data) &&
+        request.resource.data.device_id == deviceId &&
+        (
+          isAdmin() ||
+          isDeviceOwner(request.resource.data)
+        );
+
+      // Admins and authenticated device owners can update device status
+      allow update: if isAuthenticated() &&
+        isValidDevice(request.resource.data) &&
+        request.resource.data.device_id == resource.data.device_id &&
+        (
+          isAdmin() ||
+          (
+            isDeviceOwner(resource.data) &&
+            areDeviceImmutableFieldsUnchanged()
+          )
+        );
+
+      // Only administrators can remove device registrations
+      allow delete: if isAdmin();
+
+      // 3. devices/{deviceId}/readings/{readingId}
+      // Time-series biometric telemetry readings
+      match /readings/{readingId} {
+        // Authenticated astronauts, flight surgeons, and observers can read readings
+        allow read: if isAuthenticated();
+
+        // New readings can be appended if physiological ranges and timestamps are valid
+        allow create: if isAuthenticated() &&
+          isValidReading(request.resource.data);
+
+        // Telemetry readings are immutable append-only records; updates and deletes are forbidden
+        allow update, delete: if false;
+      }
+    }
+
+    // 4. mission/current
+    // Real-time crew manifest and expedition status
+    match /mission/current {
+      // Public observers and authenticated crew can view current mission status
+      allow read: if true;
+
+      // Only mission administrators can update the manifest and expedition status
+      allow create, update: if isAdmin() && isValidMission(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+  }
+}
+
