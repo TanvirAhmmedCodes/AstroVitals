@@ -91,3 +91,9 @@ credentials.json
 *.key
 
 
+
+# PlatformIO & Embedded Builds
+.pio/
+firmware/.pio/
+*.bin
+*.elf
