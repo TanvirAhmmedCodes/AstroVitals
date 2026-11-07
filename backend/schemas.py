@@ -62,6 +62,16 @@ class VitalsLatestResponse(BaseModel):
     temp_delta_f: float = 0.0
     status: str = "nominal"  # nominal, caution, warning, critical
     is_anomaly: bool = False
+    is_hardware_reading: bool = True
+    sensors: Optional[Dict[str, bool]] = Field(
+        default_factory=lambda: {
+            "max30102": True,
+            "ds18b20": True,
+            "mpu6050": True,
+            "ssd1306": True,
+            "mlx90614": False,
+        }
+    )
     provenance: Optional[Dict[str, Any]] = None
 
 
