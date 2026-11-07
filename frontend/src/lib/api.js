@@ -94,11 +94,8 @@ export async function fetchLatestVitals(astronautId = 'astronaut-A') {
       if (Date.now() - tsMs > 60000) {
         try {
           const cloudRes = await axios.get(`https://astrovitals.onrender.com/api/v1/vitals/latest?astronaut_id=${astronautId}`, { timeout: 4000 });
-          if (cloudRes.data && cloudRes.data.timestamp_utc) {
-            const cloudTs = new Date(cloudRes.data.timestamp_utc).getTime();
-            if (Date.now() - cloudTs < 60000) {
-              return cloudRes.data;
-            }
+          if (cloudRes.data && cloudRes.data.heart_rate_bpm !== undefined) {
+            return cloudRes.data;
           }
         } catch (_) {}
       }

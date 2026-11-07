@@ -135,6 +135,7 @@ float redAC = 0.0;
 float redDC = 0.0;
 long lastRawIR = 0;
 long lastRawRed = 0;
+bool fingerAttached = false;
 bool ppgStreamActive = false;
 unsigned long lastPPGStreamMs = 0;
 
@@ -162,11 +163,43 @@ void setHapticPin(bool active) {
   }
 }
 
+// Multi-Tier Visual LED State Machine
+enum LEDStatusMode {
+  LED_MODE_NOMINAL,   // Green Solid ON, Red OFF
+  LED_MODE_WARNING,   // Green Blinking (temp/vitals increasing), Red OFF
+  LED_MODE_EMERGENCY  // Green OFF, Red Solid ON
+};
+LEDStatusMode currentLedMode = LED_MODE_NOMINAL;
+unsigned long lastLedToggleMs = 0;
+bool ledBlinkState = false;
+
 // Unified LED status driver
 void setStatusLEDs(bool nominal, bool anomaly) {
   digitalWrite(LED_GREEN_NOMINAL, nominal ? HIGH : LOW);
   digitalWrite(LED_ONBOARD, nominal ? HIGH : LOW);
   digitalWrite(LED_RED_ANOMALY, anomaly ? HIGH : LOW);
+}
+
+void updateLEDs(unsigned long now) {
+  if (currentLedMode == LED_MODE_EMERGENCY) {
+    digitalWrite(LED_GREEN_NOMINAL, LOW);
+    digitalWrite(LED_ONBOARD, LOW);
+    digitalWrite(LED_RED_ANOMALY, HIGH);
+  } else if (currentLedMode == LED_MODE_WARNING) {
+    digitalWrite(LED_RED_ANOMALY, LOW);
+    // Green light blinks at 300ms when vitals or temperature are increasing
+    if (now - lastLedToggleMs >= 300) {
+      lastLedToggleMs = now;
+      ledBlinkState = !ledBlinkState;
+      digitalWrite(LED_GREEN_NOMINAL, ledBlinkState ? HIGH : LOW);
+      digitalWrite(LED_ONBOARD, ledBlinkState ? HIGH : LOW);
+    }
+  } else {
+    // Nominal natural state: Green light solid ON, Red light OFF
+    digitalWrite(LED_GREEN_NOMINAL, HIGH);
+    digitalWrite(LED_ONBOARD, HIGH);
+    digitalWrite(LED_RED_ANOMALY, LOW);
+  }
 }
 
 // Button Debounce & Long-Press Timer for Hardware Reset
@@ -391,8 +424,9 @@ void loop() {
       break;
   }
 
-  // 4. Update Haptic State Machine (Non-blocking pulses)
+  // 4. Update Haptic State Machine & Visual LEDs (Non-blocking)
   updateHapticStateMachine(now);
+  updateLEDs(now);
 
   // 5. Update Local OLED Display (every 250ms)
   if (now - lastDisplayUpdateMs >= 250) {
@@ -403,8 +437,9 @@ void loop() {
   // 6. Optional Serial PPG Telemetry Stream for diagnostics
   if (ppgStreamActive && (now - lastPPGStreamMs >= 200)) {
     lastPPGStreamMs = now;
-    Serial.printf("[PPG] IR: %ld | Red: %ld | HR: %.1f BPM | SpO2: %.1f %% | Touch: %s\n",
-                  lastRawIR, lastRawRed, currentHR, currentSpO2, (lastRawIR >= 15000) ? "YES" : "NO");
+    Serial.printf("[PPG] IR: %ld | Red: %ld | HR: %.1f BPM | SpO2: %.1f %% | Touch: %s | LED: %s\n",
+                  lastRawIR, lastRawRed, currentHR, currentSpO2, (lastRawIR >= 25000) ? "YES" : "NO",
+                  (currentLedMode == LED_MODE_EMERGENCY) ? "RED_EMERGENCY" : ((currentLedMode == LED_MODE_WARNING) ? "GREEN_BLINK_WARNING" : "GREEN_NOMINAL"));
   }
 
   delay(5);
@@ -439,18 +474,17 @@ void sampleSensors(unsigned long now) {
     lastRawIR = irValue;
     lastRawRed = redValue;
 
-    // Finger detection threshold: ambient light/bench is < 30,000 counts; finger contact is 35,000 to 100,000+
-    if (irValue < 30000) {
+    // Finger detection threshold: ambient bench reflection is < 22,000 counts; finger contact is 25,000 to 120,000+
+    if (irValue < 22000) {
       // Off-body standby: Hold standard resting baseline when no finger on optical glass
-      currentHR = 72.0;
-      currentSpO2 = 98.4;
-      lastBeatMs = now;
+      fingerAttached = false;
       firstBeatDetected = false;
       irDC = 0.0;
       redDC = 0.0;
       irAC = 0.0;
       redAC = 0.0;
     } else {
+      fingerAttached = true;
       // Finger detected on sensor!
       // 1. Dual-Path Heart Rate Detection (Maxim PBA algorithm + AC systolic peak follower)
       bool beatDetected = checkForBeat(irValue);
@@ -649,39 +683,50 @@ void checkLocalThresholds() {
   isAnomaly = false;
   alertRule = "NONE";
 
-  // Check if sensor is actively worn on body vs resting on bench/standby
-  // Use lastRawIR directly without redundant I2C bus traffic
-  bool isWorn = (lastRawIR >= 30000);
+  bool isWorn = (lastRawIR >= 25000);
 
-  // A. Severe Impact Alarm (require > 8.0g so normal handling does not false-alarm)
+  // 1. CRITICAL EMERGENCY CONDITIONS (Red LED ON, Green LED OFF, Haptic Alarm)
   if (currentAccelMag > 8.0) {
     isAnomaly = true;
-    alertRule = "HIGH-G IMPACT (>8.0g)";
-  }
-  // B. Thermal Extreme Alarms (Severe fever above 104 F)
-  else if (currentSkinTempF > 104.0) {
+    alertRule = "CRITICAL: HIGH-G IMPACT (>8.0g)";
+  } else if (currentSkinTempF > 103.5) {
     isAnomaly = true;
-    alertRule = "FEVER HIGH (>104F)";
-  }
-  // C. Biometric Physiological Alarms (Active ONLY when finger is firmly on sensor and pulse is active)
-  else if (isWorn && firstBeatDetected) {
-    if (currentHR < 40.0) {
+    alertRule = "CRITICAL: SEVERE FEVER (>103.5F)";
+  } else if (isWorn && firstBeatDetected) {
+    if (currentHR < 40.0 && currentHR > 0.0) {
       isAnomaly = true;
-      alertRule = "HR LOW (<40 BPM)";
-    } else if (currentHR > 185.0) {
+      alertRule = "CRITICAL: SEVERE BRADYCARDIA (<40 BPM)";
+    } else if (currentHR > 180.0) {
       isAnomaly = true;
-      alertRule = "HR HIGH (>185 BPM)";
-    } else if (currentSpO2 < 88.0) {
+      alertRule = "CRITICAL: SEVERE TACHYCARDIA (>180 BPM)";
+    } else if (currentSpO2 < 88.0 && currentSpO2 > 0.0) {
       isAnomaly = true;
-      alertRule = "SPO2 LOW (<88%)";
+      alertRule = "CRITICAL: HYPOXEMIA (<88%)";
     } else if (currentSkinTempF < 80.0) {
       isAnomaly = true;
-      alertRule = "HYPOTHERMIA (<80F)";
+      alertRule = "CRITICAL: HYPOTHERMIA (<80F)";
     }
   }
 
+  // 2. WARNING / INCREASING CONDITIONS (Green LED Blinks, Red LED stays OFF)
+  // When temperature is increasing, heart rate is elevated, or active exertion occurs
+  bool isWarning = false;
+  if (!isAnomaly) {
+    if (currentSkinTempF >= 99.5) {
+      isWarning = true;
+      alertRule = "ADVISORY: ELEVATED TEMP (>99.5F)";
+    } else if (isWorn && currentHR >= 105.0) {
+      isWarning = true;
+      alertRule = "ADVISORY: ELEVATED PULSE (>105 BPM)";
+    } else if (currentAccelMag >= 1.8) {
+      isWarning = true;
+      alertRule = "ADVISORY: ACTIVE EXERTION";
+    }
+  }
+
+  // Set Visual Indicator & Actuator Mode
   if (isAnomaly) {
-    setStatusLEDs(false, true);
+    currentLedMode = LED_MODE_EMERGENCY;
     alertSource = "LOCAL";
 
     unsigned long now = millis();
@@ -689,12 +734,16 @@ void checkLocalThresholds() {
       triggerHapticAlarm(3);
       lastHapticTriggerMs = now;
     }
-  } else {
+  } else if (isWarning) {
+    currentLedMode = LED_MODE_WARNING;
     if (!hapticActive) {
       setHapticPin(false);
     }
-    // Solid green nominal LED whenever system is online and nominal
-    setStatusLEDs(true, false);
+  } else {
+    currentLedMode = LED_MODE_NOMINAL;
+    if (!hapticActive) {
+      setHapticPin(false);
+    }
   }
 }
 
@@ -766,8 +815,13 @@ void renderDisplay() {
   display.drawLine(0, 9, 128, 9, SSD1306_WHITE);
 
   display.setCursor(0, 14);
-  display.printf("HR:   %3.0f BPM\n", currentHR);
-  display.printf("SpO2: %3.1f %%\n", currentSpO2);
+  if (fingerAttached && currentHR > 0.0) {
+    display.printf("HR:   %3.0f BPM\n", currentHR);
+    display.printf("SpO2: %3.1f %%\n", currentSpO2);
+  } else {
+    display.println("HR:   -- (TOUCH)");
+    display.println("SpO2: -- % (ATTACH)");
+  }
   display.printf("TEMP: %3.1f F\n", currentSkinTempF);
   display.printf("ACC:  %3.2f g (%s)\n", currentAccelMag, hasMPU ? "MPU" : "SIM");
   display.printf("WIFI: %s (%d)\n", (WiFi.status() == WL_CONNECTED) ? wifiSSID.c_str() : "OFFLINE", WiFi.RSSI());
@@ -817,19 +871,23 @@ void transmitTelemetry() {
   time_t nowTime;
   time(&nowTime);
   char timeBuffer[32];
-  if (nowTime > 1672531199) { // Later than Jan 1, 2023
+  bool hasNTP = (nowTime > 1672531199);
+  if (hasNTP) {
     struct tm timeinfo;
     gmtime_r(&nowTime, &timeinfo);
     strftime(timeBuffer, sizeof(timeBuffer), "%Y-%m-%dT%H:%M:%SZ", &timeinfo);
-  } else {
-    snprintf(timeBuffer, sizeof(timeBuffer), "2026-10-31T14:00:00Z");
   }
 
   JsonArray readings = doc["readings"].to<JsonArray>();
   JsonObject r = readings.add<JsonObject>();
-  r["timestamp_utc"] = timeBuffer;
-  r["heart_rate_bpm"] = currentHR;
-  r["spo2_pct"] = currentSpO2;
+  if (hasNTP) {
+    r["timestamp_utc"] = timeBuffer;
+  } else {
+    r["timestamp_utc"] = nullptr; // Authoritative real-time server timestamp will be assigned
+  }
+  r["heart_rate_bpm"] = (fingerAttached && currentHR > 0.0) ? currentHR : 72.0;
+  r["spo2_pct"] = (fingerAttached && currentSpO2 > 0.0) ? currentSpO2 : 98.4;
+  r["finger_attached"] = fingerAttached;
   r["skin_temp_f"] = round(currentSkinTempF * 10.0) / 10.0;
   r["skin_temp_c"] = round(currentSkinTempC * 10.0) / 10.0;
   r["accel_x_g"] = accelX;
