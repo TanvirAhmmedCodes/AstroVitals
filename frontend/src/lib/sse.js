@@ -9,13 +9,16 @@ export function connectVitalsSSE(astronautId, onMessage, onError) {
   let reconnectTimeout = null;
 
   function getSSEUrl() {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.')) {
+        return `http://${hostname}:8080/api/v1/vitals/live?astronaut_id=${astronautId}`;
+      }
+      return `https://astrovitals.onrender.com/api/v1/vitals/live?astronaut_id=${astronautId}`;
+    }
     const rawBase = import.meta.env.VITE_API_BASE_URL || '';
     if (rawBase) {
-      // Auto-detect secure protocol if running on HTTPS
       let base = rawBase.replace(/\/$/, '');
-      if (typeof window !== 'undefined' && window.location.protocol === 'https:' && base.startsWith('http:')) {
-        base = base.replace('http:', 'https:');
-      }
       return `${base}/api/v1/vitals/live?astronaut_id=${astronautId}`;
     }
     return `/api/v1/vitals/live?astronaut_id=${astronautId}`;

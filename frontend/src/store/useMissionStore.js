@@ -1,18 +1,16 @@
 import { create } from 'zustand';
 import { DEMO_SCENARIOS, generateDemoVitals, generateDemoHistory } from '../lib/demoScenarios';
 
-const initialMode = typeof window !== 'undefined'
-  ? localStorage.getItem('astrovitals_operating_mode') || 'DEMO'
-  : 'DEMO';
+const initialMode = 'LIVE';
 
 const initialScenario = typeof window !== 'undefined'
   ? localStorage.getItem('astrovitals_demo_scenario') || 'nominal'
   : 'nominal';
 
 export const useMissionStore = create((set, get) => ({
-  // Operating Modes: 'LIVE' or 'DEMO'
+  // Operating Modes: 'LIVE' or 'DEMO' (defaults to LIVE for real hardware stream)
   operatingMode: initialMode,
-  isDemoMode: initialMode === 'DEMO',
+  isDemoMode: false,
   demoScenario: initialScenario,
 
   setOperatingMode: (mode) => {

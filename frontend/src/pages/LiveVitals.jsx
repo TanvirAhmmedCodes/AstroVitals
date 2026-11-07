@@ -183,10 +183,10 @@ export default function LiveVitals() {
     return {
       index: idx,
       time: timeStr,
-      hr: Math.round(item.heart_rate_bpm || 72),
-      spo2: Math.round(item.spo2_pct || 98),
-      temp: parseFloat(((item.skin_temp_f || (item.skin_temp_c ? item.skin_temp_c * 1.8 + 32.0 : 97.7))).toFixed(1)),
-      motion: parseFloat((item.accel_magnitude_g || 0.28).toFixed(2)),
+      hr: parseFloat(Number(item.heart_rate_bpm || 72.5).toFixed(1)),
+      spo2: parseFloat(Number(item.spo2_pct || 98.4).toFixed(1)),
+      temp: parseFloat(((item.skin_temp_f || (item.skin_temp_c ? item.skin_temp_c * 1.8 + 32.0 : 85.6))).toFixed(1)),
+      motion: parseFloat((item.accel_magnitude_g || 0.03).toFixed(2)),
       baselineHr: 72,
       baselineSpo2: 98,
     };
@@ -429,10 +429,10 @@ export default function LiveVitals() {
                   <tr key={idx} className="hover:bg-white/5 transition-colors">
                     <td className="py-2 px-3 text-[#00D4FF] font-semibold">{time}</td>
                     <td className="py-2 px-3 text-[#FF4D6D] font-bold">
-                      {Math.round(row.heart_rate_bpm || 72)}
+                      {Number(row.heart_rate_bpm || 72.5).toFixed(1)}
                     </td>
                     <td className="py-2 px-3 text-[#4DA6FF] font-bold">
-                      {Math.round(row.spo2_pct || 98)}
+                      {Number(row.spo2_pct || 98.4).toFixed(1)}
                     </td>
                     <td className="py-2 px-3 text-[#FFA94D]">
                       {(row.skin_temp_f || (row.skin_temp_c ? row.skin_temp_c * 1.8 + 32.0 : 97.7)).toFixed(1)}

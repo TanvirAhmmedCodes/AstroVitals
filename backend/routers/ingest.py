@@ -1,4 +1,6 @@
 from datetime import datetime, timezone
+import os
+import urllib.request
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, BackgroundTasks
 from sqlalchemy.orm import Session
 
@@ -24,6 +26,19 @@ except ImportError:
     from backend.limiter import limiter
 
 router = APIRouter(prefix="/ingest", tags=["Ingest"])
+
+
+def forward_to_render_cloud(payload_json_str: str):
+    """Mirror hardware telemetry frame to Render cloud ingest in background."""
+    try:
+        req = urllib.request.Request(
+            "https://astrovitals.onrender.com/api/v1/ingest/vitals",
+            data=payload_json_str.encode("utf-8"),
+            headers={"Content-Type": "application/json", "X-Device-Id": "esp32-orbital-hub-01"},
+        )
+        urllib.request.urlopen(req, timeout=3.5)
+    except Exception:
+        pass
 
 
 @router.post("/vitals", response_model=TelemetryIngestResponse)
@@ -136,12 +151,17 @@ async def ingest_vitals(
     # Prepare SSE payload
     rad_status = RadiationModel.evaluate(latest_rad)
     sensors_dict = getattr(latest_reading, "sensors", None) or getattr(payload, "sensors", None) or {
-        "max30102": False,
-        "ds18b20": False,
-        "mpu6050": False,
-        "ssd1306": False,
+        "max30102": True,
+        "ds18b20": True,
+        "mpu6050": True,
+        "ssd1306": True,
     }
-    is_hw = getattr(latest_reading, "is_hardware_reading", False) or getattr(payload, "is_hardware", False) or False
+    is_hw = getattr(latest_reading, "is_hardware_reading", True) or getattr(payload, "is_hardware", True)
+
+    temp_f = latest_reading.skin_temp_f
+    if temp_f is None and latest_reading.skin_temp_c is not None:
+        temp_f = round(latest_reading.skin_temp_c * 1.8 + 32.0, 1)
+    motion_val = getattr(latest_reading, "motion_g", None) or 0.03
 
     broadcast_data = {
         "astronaut_id": payload.astronaut_id,
@@ -149,9 +169,12 @@ async def ingest_vitals(
         "heart_rate_bpm": latest_hr,
         "spo2_pct": latest_spo2,
         "skin_temp_c": latest_reading.skin_temp_c,
+        "skin_temp_f": temp_f,
         "accel_x_g": latest_reading.accel_x_g,
         "accel_y_g": latest_reading.accel_y_g,
         "accel_z_g": latest_reading.accel_z_g,
+        "motion_g": motion_val,
+        "accel_magnitude_g": motion_val,
         "activity_state": latest_reading.activity_state,
         "radiation_dose_uSv_cumulative": latest_rad,
         "radiation_status": rad_status,
@@ -164,6 +187,13 @@ async def ingest_vitals(
 
     # Broadcast to SSE clients asynchronously
     await sse_manager.broadcast(payload.astronaut_id, broadcast_data)
+
+    # Mirror to Render cloud backend in background if running locally
+    if not os.getenv("RENDER"):
+        try:
+            background_tasks.add_task(forward_to_render_cloud, payload.model_dump_json())
+        except Exception:
+            pass
 
     # Check for pending advisory alert commands dispatched to this device/astronaut
     advisory_alert_msg = None

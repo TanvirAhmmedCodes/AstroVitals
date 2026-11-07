@@ -6,22 +6,17 @@ const rawEnvBase = import.meta.env.VITE_API_BASE_URL;
 function resolveApiBase() {
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
-    // In production on Vercel or any remote domain, point directly to the deployed Render cloud backend
-    if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
-      return 'https://astrovitals.onrender.com/api/v1';
+    // When running locally or on local LAN Wi-Fi
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.')) {
+      return `http://${hostname}:8080/api/v1`;
     }
+    // In production on Vercel or any remote domain, point directly to the deployed Render cloud backend
+    return 'https://astrovitals.onrender.com/api/v1';
   }
   if (rawEnvBase && rawEnvBase.trim()) {
     return `${rawEnvBase.trim().replace(/\/$/, '')}/api/v1`;
   }
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'http://localhost:8080/api/v1';
-    }
-    return 'https://astrovitals.onrender.com/api/v1';
-  }
-  return '/api/v1';
+  return 'http://localhost:8080/api/v1';
 }
 
 export const API_BASE = resolveApiBase();
