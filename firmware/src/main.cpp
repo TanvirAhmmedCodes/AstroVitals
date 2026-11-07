@@ -65,6 +65,7 @@ const char* AP_SSID = "AstroVitals-Hub-Setup";
 #define HAPTIC_PIN 18
 #define LED_RED_ANOMALY 25
 #define LED_GREEN_NOMINAL 26
+#define LED_ONBOARD 2
 #define BOOT_BUTTON_PIN 0
 
 #define SCREEN_WIDTH 128
@@ -129,7 +130,7 @@ String alertSource = "LOCAL";
 
 // Haptic Vibration State Machine (Non-blocking pulses)
 bool hapticActive = false;
-bool hapticInverted = false;
+bool hapticInverted = true; // Default to Active-LOW (HIGH=OFF, LOW=ON) for sinking motor circuits
 int hapticPulseCount = 0;
 unsigned long hapticStateChangeMs = 0;
 bool hapticMotorState = false;
@@ -138,10 +139,19 @@ const unsigned long HAPTIC_DEBOUNCE_MS = 30000;
 
 void setHapticPin(bool active) {
   if (hapticInverted) {
+    // Active-LOW module: LOW is ON, HIGH is OFF
     digitalWrite(HAPTIC_PIN, active ? LOW : HIGH);
   } else {
+    // Active-HIGH module: HIGH is ON, LOW is OFF
     digitalWrite(HAPTIC_PIN, active ? HIGH : LOW);
   }
+}
+
+// Unified LED status driver
+void setStatusLEDs(bool nominal, bool anomaly) {
+  digitalWrite(LED_GREEN_NOMINAL, nominal ? HIGH : LOW);
+  digitalWrite(LED_ONBOARD, nominal ? HIGH : LOW);
+  digitalWrite(LED_RED_ANOMALY, anomaly ? HIGH : LOW);
 }
 
 // Button Debounce & Long-Press Timer for Hardware Reset
@@ -204,25 +214,24 @@ void setup() {
   pinMode(HAPTIC_PIN, OUTPUT);
   pinMode(LED_RED_ANOMALY, OUTPUT);
   pinMode(LED_GREEN_NOMINAL, OUTPUT);
+  pinMode(LED_ONBOARD, OUTPUT);
   pinMode(BOOT_BUTTON_PIN, INPUT_PULLUP);
   pinMode(MAX30102_INT_PIN, INPUT_PULLUP);
 
-  setHapticPin(false);
-  digitalWrite(LED_RED_ANOMALY, LOW);
-  digitalWrite(LED_GREEN_NOMINAL, HIGH);
-
-  // 2. Hardware Confidence Chirp (50ms tap)
-  setHapticPin(true);
-  delay(50);
-  setHapticPin(false);
-
-  // 3. Load Persistent Wi-Fi and Endpoint Configuration from NVS
+  // 2. Load Persistent Wi-Fi, Endpoint, and Haptic Polarity Configuration from NVS
   loadNVSConfiguration();
+
+  // 3. Initialize Actuators Safely: Motor OFF, Nominal Green & Onboard LED ON
+  setHapticPin(false);
+  setStatusLEDs(true, false);
 
   // 4. Initialize I2C Bus and Probe Sensors
   Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
   Wire.setClock(400000);
   scanI2CDevices();
+
+  // Initial immediate sample so vitals cache is populated
+  sampleSensors(millis());
 
   // 5. Attempt Station Wi-Fi Connection
   Serial.printf("[WIFI] Connecting to network: %s\n", wifiSSID.c_str());
@@ -253,25 +262,57 @@ void loop() {
       eraseNVSConfiguration();
       enterAPMode();
     } else if (cmd.equalsIgnoreCase("STATUS")) {
-      Serial.printf("[STATUS] State: %d | SSID: %s | IP: %s | RSSI: %d dBm | Temp: %.1f F (%.1f C) | FreeHeap: %u\n",
-                    currentState, WiFi.SSID().c_str(), WiFi.localIP().toString().c_str(), WiFi.RSSI(), currentSkinTempF, currentSkinTempC, ESP.getFreeHeap());
+      Serial.printf("[STATUS] State: %d | SSID: %s | IP: %s | RSSI: %d dBm | Temp: %.1f F (%.1f C) | Haptic: %s (Active:%d) | Anomaly: %d (%s) | FreeHeap: %u\n",
+                    currentState, WiFi.SSID().c_str(), WiFi.localIP().toString().c_str(), WiFi.RSSI(), currentSkinTempF, currentSkinTempC,
+                    hapticInverted ? "ACTIVE-LOW" : "ACTIVE-HIGH", hapticActive, isAnomaly, alertRule.c_str(), ESP.getFreeHeap());
     } else if (cmd.equalsIgnoreCase("INVERT_HAPTIC")) {
       hapticInverted = !hapticInverted;
       setHapticPin(false);
-      Serial.printf("[CMD] Haptic inverted state is now: %s\n", hapticInverted ? "ACTIVE-LOW" : "ACTIVE-HIGH");
+      preferences.begin("astro_cfg", false);
+      preferences.putBool("haptic_inv", hapticInverted);
+      preferences.end();
+      Serial.printf("[CMD] Haptic inverted state is now: %s (saved to NVS)\n", hapticInverted ? "ACTIVE-LOW" : "ACTIVE-HIGH");
+    } else if (cmd.equalsIgnoreCase("HAPTIC_ACTIVE_LOW")) {
+      hapticInverted = true;
+      setHapticPin(false);
+      preferences.begin("astro_cfg", false);
+      preferences.putBool("haptic_inv", true);
+      preferences.end();
+      Serial.println("[CMD] Haptic set to ACTIVE-LOW (HIGH=OFF, LOW=ON) and saved to NVS.");
+    } else if (cmd.equalsIgnoreCase("HAPTIC_ACTIVE_HIGH")) {
+      hapticInverted = false;
+      setHapticPin(false);
+      preferences.begin("astro_cfg", false);
+      preferences.putBool("haptic_inv", false);
+      preferences.end();
+      Serial.println("[CMD] Haptic set to ACTIVE-HIGH (LOW=OFF, HIGH=ON) and saved to NVS.");
+    } else if (cmd.equalsIgnoreCase("HAPTIC_OFF") || cmd.equalsIgnoreCase("MOTOR_OFF")) {
+      hapticActive = false;
+      setHapticPin(false);
+      Serial.println("[CMD] Haptic motor forced OFF.");
     } else if (cmd.equalsIgnoreCase("TEST_HAPTIC")) {
-      Serial.println("[CMD] Testing haptic motor alarm...");
+      Serial.println("[CMD] Testing haptic motor alarm (3 pulses)...");
       triggerHapticAlarm(3);
+    } else if (cmd.equalsIgnoreCase("TEST_LEDS")) {
+      Serial.println("[CMD] Testing Status LEDs (Green, Onboard, Red)...");
+      setStatusLEDs(true, false);
+      delay(400);
+      setStatusLEDs(false, true);
+      delay(400);
+      setStatusLEDs(true, false);
     }
   }
 
-  // 3. System State Machine Execution
+  // 3. Continuously sample sensors and evaluate safety envelope
+  sampleSensors(now);
+  checkLocalThresholds();
+
+  // 4. System State Machine Execution
   switch (currentState) {
     case STATE_CONNECTING_WIFI: {
       if (WiFi.status() == WL_CONNECTED) {
         currentState = STATE_ONLINE;
-        digitalWrite(LED_GREEN_NOMINAL, HIGH);
-        digitalWrite(LED_RED_ANOMALY, LOW);
+        setStatusLEDs(true, false);
         configTime(0, 0, "pool.ntp.org", "time.nist.gov");
         Serial.printf("[WIFI] Successfully connected! IP: %s (RSSI: %d dBm)\n",
                       WiFi.localIP().toString().c_str(), WiFi.RSSI());
@@ -299,6 +340,7 @@ void loop() {
         apBlinkState = !apBlinkState;
         digitalWrite(LED_RED_ANOMALY, apBlinkState ? HIGH : LOW);
         digitalWrite(LED_GREEN_NOMINAL, LOW);
+        digitalWrite(LED_ONBOARD, LOW);
       }
       break;
     }
@@ -308,17 +350,16 @@ void loop() {
       // Reconnection check
       if (WiFi.status() != WL_CONNECTED) {
         currentState = STATE_OFFLINE_BUFFERING;
-        digitalWrite(LED_GREEN_NOMINAL, LOW);
+        if (!isAnomaly) {
+          digitalWrite(LED_GREEN_NOMINAL, LOW);
+          digitalWrite(LED_ONBOARD, LOW);
+        }
       } else {
         currentState = STATE_ONLINE;
-        digitalWrite(LED_GREEN_NOMINAL, HIGH);
+        if (!isAnomaly) {
+          setStatusLEDs(true, false);
+        }
       }
-
-      // Sample physical sensors or update calibrated baseline
-      sampleSensors(now);
-
-      // Evaluate edge safety envelope
-      checkLocalThresholds();
 
       // Transmit telemetry every 1000ms
       if (now - lastTelemetryTxMs >= 1000) {
@@ -391,11 +432,15 @@ void sampleSensors(unsigned long now) {
 
   // C. DS18B20 High-Precision Digital Skin Temperature (Fahrenheit & Celsius)
   if (hasDS18B20) {
-    ds18b20.requestTemperatures();
-    float tempC = ds18b20.getTempCByIndex(0);
-    if (!isnan(tempC) && tempC > 15.0 && tempC < 65.0 && tempC != 85.0 && tempC != -127.0) {
-      currentSkinTempC = tempC;
-      currentSkinTempF = tempC * 1.8 + 32.0;
+    static unsigned long lastDSTempReadMs = 0;
+    if (now - lastDSTempReadMs >= 750) {
+      lastDSTempReadMs = now;
+      float tempC = ds18b20.getTempCByIndex(0);
+      if (!isnan(tempC) && tempC > 10.0 && tempC < 60.0 && tempC != 85.0 && tempC != -127.0) {
+        currentSkinTempC = tempC;
+        currentSkinTempF = tempC * 1.8 + 32.0;
+      }
+      ds18b20.requestTemperatures();
     }
   } else {
     float tSec = now / 1000.0;
@@ -449,6 +494,8 @@ void scanI2CDevices() {
     hasDS18B20 = true;
     activeDSPin = DS18B20_PIN;
     ds18b20.setResolution(10);
+    ds18b20.setWaitForConversion(false);
+    ds18b20.requestTemperatures();
     Serial.printf("  [+] DS18B20 Digital Temp sensor detected on GPIO %d (%d device(s) found).\n", DS18B20_PIN, dsCount);
   } else {
     const int ALT_PINS[] = {23, 19, 15, 27, 32, 33};
@@ -464,6 +511,8 @@ void scanI2CDevices() {
         ds18b20.setOneWire(&oneWire);
         ds18b20.begin();
         ds18b20.setResolution(10);
+        ds18b20.setWaitForConversion(false);
+        ds18b20.requestTemperatures();
         Serial.printf("  [+] DS18B20 Digital Temp sensor detected on alternate GPIO %d!\n", p);
         break;
       }
@@ -496,30 +545,46 @@ void checkLocalThresholds() {
   isAnomaly = false;
   alertRule = "NONE";
 
-  if (currentHR < 40.0) {
+  // Check if sensor is actively worn on body vs resting on bench/standby
+  bool isWorn = false;
+  if (hasMAX30102) {
+    long irVal = particleSensor.getIR();
+    isWorn = (irVal >= 50000);
+  } else {
+    // If no MAX30102, consider on body if skin temp is above 91.4 F (33.0 C)
+    isWorn = (currentSkinTempF >= 91.4);
+  }
+
+  // A. Motion Impact Alarm (always active, worn or unworn)
+  if (currentAccelMag > 4.0) {
     isAnomaly = true;
-    alertRule = "HR LOW (<40)";
-  } else if (currentHR > 180.0) {
-    isAnomaly = true;
-    alertRule = "HR HIGH (>180)";
-  } else if (currentSpO2 < 90.0) {
-    isAnomaly = true;
-    alertRule = "SPO2 LOW (<90%)";
-  } else if (currentSkinTempF >= 89.6 && currentSkinTempF < 95.0) {
-    // Only flag hypothermia if sensor is attached to skin (89.6 F to 95.0 F)
-    isAnomaly = true;
-    alertRule = "TEMP LOW (<95F)";
-  } else if (currentSkinTempF > 102.2) {
+    alertRule = "HIGH-G IMPACT (>4.0g)";
+  }
+  // B. Thermal Extreme Alarms (always active)
+  else if (currentSkinTempF > 102.2) {
     isAnomaly = true;
     alertRule = "FEVER HIGH (>102F)";
-  } else if (currentAccelMag > 4.0) {
-    isAnomaly = true;
-    alertRule = "HIGH-G IMPACT";
+  }
+  // C. Biometric Physiological Alarms (Active ONLY when sensor is actively worn on body)
+  else if (isWorn) {
+    if (currentHR < 40.0) {
+      isAnomaly = true;
+      alertRule = "HR LOW (<40 BPM)";
+    } else if (currentHR > 180.0) {
+      isAnomaly = true;
+      alertRule = "HR HIGH (>180 BPM)";
+    } else if (currentSpO2 < 90.0) {
+      isAnomaly = true;
+      alertRule = "SPO2 LOW (<90%)";
+    } else if (currentSkinTempF < 88.0) {
+      // Worn on body but peripheral skin temp dropped below 88.0 F (31.1 C)
+      isAnomaly = true;
+      alertRule = "HYPOTHERMIA (<88F)";
+    }
   }
 
   if (isAnomaly) {
-    digitalWrite(LED_RED_ANOMALY, HIGH);
-    digitalWrite(LED_GREEN_NOMINAL, LOW);
+    setStatusLEDs(false, true);
     alertSource = "LOCAL";
 
     unsigned long now = millis();
@@ -532,8 +597,7 @@ void checkLocalThresholds() {
       setHapticPin(false);
     }
     if (currentState == STATE_ONLINE) {
-      digitalWrite(LED_RED_ANOMALY, LOW);
-      digitalWrite(LED_GREEN_NOMINAL, HIGH);
+      setStatusLEDs(true, false);
     }
   }
 }
@@ -958,15 +1022,16 @@ void handleStatus() {
 
 void loadNVSConfiguration() {
   preferences.begin("astro_cfg", true); // read-only
+  hapticInverted = preferences.getBool("haptic_inv", true); // Default to Active-LOW (true)
   if (preferences.isKey("has_custom")) {
     wifiSSID = preferences.getString("ssid", DEFAULT_WIFI_SSID);
     wifiPass = preferences.getString("pass", DEFAULT_WIFI_PASS);
     ingestUrl = preferences.getString("ingest_url", DEFAULT_INGEST_URL);
     astronautId = preferences.getString("astro_id", DEFAULT_ASTRONAUT_ID);
     deviceId = preferences.getString("dev_id", DEFAULT_DEVICE_ID);
-    Serial.println("[NVS] Loaded saved configuration from persistent flash memory.");
+    Serial.printf("[NVS] Loaded saved configuration from flash. Haptic polarity: %s\n", hapticInverted ? "ACTIVE-LOW" : "ACTIVE-HIGH");
   } else {
-    Serial.println("[NVS] No saved credentials found. Using default test credentials.");
+    Serial.printf("[NVS] No saved credentials found. Using defaults. Haptic polarity: %s\n", hapticInverted ? "ACTIVE-LOW" : "ACTIVE-HIGH");
     wifiSSID = DEFAULT_WIFI_SSID;
     wifiPass = DEFAULT_WIFI_PASS;
     ingestUrl = DEFAULT_INGEST_URL;

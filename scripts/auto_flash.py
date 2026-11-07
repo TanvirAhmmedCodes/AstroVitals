@@ -39,8 +39,8 @@ print("The flasher will retry connecting every few seconds.")
 print("Keep holding BOOT until you see 'Writing at 0x00010000...'\n")
 
 success = False
-for attempt in range(1, 16):
-    print(f"--- [Flash Attempt {attempt}/15] Connecting to COM3... ---")
+for attempt in range(1, 31):
+    print(f"--- [Flash Attempt {attempt}/30] Connecting to COM3... ---")
     cmd = [
         str(esptool_exe),
         "--chip", "esp32",
