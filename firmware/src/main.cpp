@@ -669,8 +669,10 @@ void transmitTelemetry() {
   http.addHeader("Content-Type", "application/json");
   http.addHeader("X-Device-Id", deviceId);
 
+  static int consecutiveFailures = 0;
   int httpCode = http.POST(jsonString);
   if (httpCode > 0) {
+    consecutiveFailures = 0;
     String resp = http.getString();
     // Parse advisory ground alert from mission control
     if (resp.indexOf("advisory_alert") > 0) {
@@ -687,7 +689,13 @@ void transmitTelemetry() {
       }
     }
   } else {
-    Serial.printf("[HTTP] Ingest failed: %s\n", http.errorToString(httpCode).c_str());
+    consecutiveFailures++;
+    Serial.printf("[HTTP] Ingest failed (%s). Failures: %d\n", http.errorToString(httpCode).c_str(), consecutiveFailures);
+    if (consecutiveFailures >= 3 && ingestUrl != DEFAULT_INGEST_URL) {
+      Serial.printf("[HTTP] Local endpoint unreachable. Falling back to Cloud Render endpoint: %s\n", DEFAULT_INGEST_URL);
+      ingestUrl = DEFAULT_INGEST_URL;
+      consecutiveFailures = 0;
+    }
   }
   http.end();
 }
