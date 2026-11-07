@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class TelemetryReading(BaseModel):
-    timestamp_utc: Optional[datetime] = None
+    timestamp_utc: Optional[Any] = None
     heart_rate_bpm: Optional[float] = Field(None, ge=30, le=250)
     spo2_pct: Optional[float] = Field(None, ge=50, le=100)
     skin_temp_c: Optional[float] = Field(None, ge=15, le=55)

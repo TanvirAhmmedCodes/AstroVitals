@@ -61,9 +61,17 @@ async def ingest_vitals(
 
         # Ensure fresh UTC timestamp if device provided placeholder or missing
         entry_ts = r.timestamp_utc
-        if not entry_ts or str(entry_ts).startswith("2026-10-31") or "2026-10-31" in str(entry_ts):
+        if isinstance(entry_ts, str):
+            try:
+                entry_ts = datetime.fromisoformat(entry_ts.replace("Z", "+00:00"))
+            except Exception:
+                entry_ts = datetime.now(timezone.utc)
+        elif not isinstance(entry_ts, datetime):
             entry_ts = datetime.now(timezone.utc)
-            r.timestamp_utc = entry_ts
+
+        if str(entry_ts).startswith("2026-10-31") or "2026-10-31" in str(entry_ts) or str(entry_ts).startswith("1970"):
+            entry_ts = datetime.now(timezone.utc)
+        r.timestamp_utc = entry_ts
 
         telemetry_entry = Telemetry(
             astronaut_id=payload.astronaut_id,
