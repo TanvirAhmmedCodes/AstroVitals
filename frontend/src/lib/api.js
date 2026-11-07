@@ -87,8 +87,30 @@ export async function fetchAstronauts() {
 export async function fetchLatestVitals(astronautId = 'astronaut-A') {
   try {
     const res = await apiClient.get(`/vitals/latest?astronaut_id=${astronautId}`);
-    return res.data;
+    const data = res.data;
+    // If local telemetry is stale (>60s old) and not on cloud, fetch live stream from Render cloud
+    if (data && data.timestamp_utc && !API_BASE.includes('onrender.com')) {
+      const tsMs = new Date(data.timestamp_utc).getTime();
+      if (Date.now() - tsMs > 60000) {
+        try {
+          const cloudRes = await axios.get(`https://astrovitals.onrender.com/api/v1/vitals/latest?astronaut_id=${astronautId}`, { timeout: 4000 });
+          if (cloudRes.data && cloudRes.data.timestamp_utc) {
+            const cloudTs = new Date(cloudRes.data.timestamp_utc).getTime();
+            if (Date.now() - cloudTs < 60000) {
+              return cloudRes.data;
+            }
+          }
+        } catch (_) {}
+      }
+    }
+    return data;
   } catch (err) {
+    // If local endpoint unreachable, seamlessly query cloud Render backend
+    try {
+      const cloudRes = await axios.get(`https://astrovitals.onrender.com/api/v1/vitals/latest?astronaut_id=${astronautId}`, { timeout: 4000 });
+      if (cloudRes.data) return cloudRes.data;
+    } catch (_) {}
+
     console.warn('Using simulated vitals fallback:', err.message);
     return {
       astronaut_id: astronautId,
@@ -96,6 +118,7 @@ export async function fetchLatestVitals(astronautId = 'astronaut-A') {
       heart_rate_bpm: 72.4,
       spo2_pct: 98.2,
       skin_temp_c: 36.5,
+      skin_temp_f: 97.7,
       accel_magnitude_g: 0.28,
       activity_state: 'rest',
       radiation_dose_uSv_cumulative: 12500,
