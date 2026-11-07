@@ -116,9 +116,6 @@ def sync_reading_to_firestore(astronaut_id: str, reading: Dict[str, Any]) -> boo
     if db is None:
         return False
     try:
-        device_ref = db.collection("devices").document(astronaut_id)
-
-        # Update device status with complete hardware telemetry metadata
         timestamp_str = reading.get("timestamp_utc") or datetime.now(timezone.utc).isoformat()
         if not timestamp_str.endswith("Z") and "+" not in timestamp_str:
             timestamp_str += "Z"
@@ -130,19 +127,6 @@ def sync_reading_to_firestore(astronaut_id: str, reading: Dict[str, Any]) -> boo
             "ssd1306": True,
         }
 
-        device_ref.set({
-            "device_id": reading.get("device_id") or "esp32-orbital-hub-01",
-            "owner_astronaut_id": astronaut_id,
-            "last_seen": timestamp_str,
-            "status": "online",
-            "battery_pct": reading.get("battery_pct", 98),
-            "wifi_rssi": reading.get("wifi_rssi", -58),
-            "wifi_ssid": reading.get("wifi_ssid", "Anonymous"),
-            "firmware_version": reading.get("firmware_version", "2.3.0-ds18b20-wifi"),
-            "is_hardware_reading": reading.get("is_hardware_reading", True),
-            "sensors": sensors,
-        }, merge=True)
-
         temp_c = reading.get("skin_temp_c")
         temp_f = reading.get("skin_temp_f")
         if temp_f is None and temp_c is not None:
@@ -150,20 +134,36 @@ def sync_reading_to_firestore(astronaut_id: str, reading: Dict[str, Any]) -> boo
         elif temp_c is None and temp_f is not None:
             temp_c = round((temp_f - 32.0) * 5.0 / 9.0, 2)
 
-        # Add reading to subcollection
-        device_ref.collection("readings").add({
-            "timestamp": timestamp_str,
-            "heart_rate_bpm": reading.get("heart_rate_bpm"),
-            "spo2_pct": reading.get("spo2_pct"),
-            "skin_temp_f": temp_f,
-            "skin_temp_c": temp_c,
-            "accel_x_g": reading.get("accel_x_g", 0.0),
-            "accel_y_g": reading.get("accel_y_g", 0.0),
-            "accel_z_g": reading.get("accel_z_g", 0.98),
-            "activity_state": reading.get("activity_state", "rest"),
-            "radiation_dose_uSv_cumulative": reading.get("radiation_dose_uSv_cumulative", 0.0),
-            "buffered": reading.get("buffered", False),
-        })
+        # Update status for both astronaut_id and device_id documents in devices collection
+        target_ids = {astronaut_id, reading.get("device_id") or "esp32-orbital-hub-01"}
+        for doc_id in target_ids:
+            device_ref = db.collection("devices").document(doc_id)
+            device_ref.set({
+                "device_id": reading.get("device_id") or "esp32-orbital-hub-01",
+                "owner_astronaut_id": astronaut_id,
+                "last_seen": timestamp_str,
+                "status": "online",
+                "battery_pct": reading.get("battery_pct", 98),
+                "wifi_rssi": reading.get("wifi_rssi", -58),
+                "wifi_ssid": reading.get("wifi_ssid", "Anonymous"),
+                "firmware_version": reading.get("firmware_version", "2.3.0-ds18b20-wifi"),
+                "is_hardware_reading": reading.get("is_hardware_reading", True),
+                "sensors": sensors,
+            }, merge=True)
+
+            device_ref.collection("readings").add({
+                "timestamp": timestamp_str,
+                "heart_rate_bpm": reading.get("heart_rate_bpm"),
+                "spo2_pct": reading.get("spo2_pct"),
+                "skin_temp_f": temp_f,
+                "skin_temp_c": temp_c,
+                "accel_x_g": reading.get("accel_x_g", 0.0),
+                "accel_y_g": reading.get("accel_y_g", 0.0),
+                "accel_z_g": reading.get("accel_z_g", 0.98),
+                "activity_state": reading.get("activity_state", "rest"),
+                "radiation_dose_uSv_cumulative": reading.get("radiation_dose_uSv_cumulative", 0.0),
+                "buffered": reading.get("buffered", False),
+            })
         return True
     except Exception as e:
         logger.error(f"[Firebase] sync_reading failed: {e}")
