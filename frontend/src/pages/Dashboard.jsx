@@ -117,11 +117,11 @@ export default function Dashboard() {
       }
     );
 
-    // Background safety poll every 5 seconds
+    // Background safety poll every 2 seconds for live telemetry refresh
     const interval = setInterval(async () => {
       const v = await fetchLatestVitals(selectedAstronautId);
       if (isMounted && v) setVitals(v);
-    }, 5000);
+    }, 2000);
 
     return () => {
       isMounted = false;

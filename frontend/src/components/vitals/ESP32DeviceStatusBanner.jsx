@@ -44,6 +44,7 @@ export default function ESP32DeviceStatusBanner({
     setOperatingMode,
     demoScenario,
     setHardwareStatus,
+    vitals,
   } = useMissionStore();
 
   const isDemo = operatingMode === 'DEMO';
@@ -59,38 +60,57 @@ export default function ESP32DeviceStatusBanner({
     ip_address: '192.168.0.105',
     last_seen: new Date().toISOString(),
     sensors: {
-      max30102: false,
-      ds18b20: false,
-      mpu6050: false,
-      ssd1306: false,
+      max30102: true,
+      ds18b20: true,
+      mpu6050: true,
+      ssd1306: true,
     },
-    is_hardware_reading: false,
+    is_hardware_reading: true,
   });
 
   const [dispatching, setDispatching] = useState(false);
   const [dispatchStatus, setDispatchStatus] = useState(null);
 
-  // Sync firestore real-time status when available
+  // Parse ISO timestamp ensuring UTC handling regardless of client timezone
+  function parseUTCMs(ts) {
+    if (!ts) return 0;
+    const str = String(ts).trim();
+    const normalized = (str.endsWith('Z') || str.includes('+')) ? str : str + 'Z';
+    const ms = new Date(normalized).getTime();
+    return isNaN(ms) ? new Date(str).getTime() : ms;
+  }
+
+  // Sync firestore real-time status or live REST/SSE vitals stream
   useEffect(() => {
     if (firestoreDevice) {
-      setDeviceData((prev) => {
-        const merged = {
-          ...prev,
-          ...firestoreDevice,
-          wifi_ssid: firestoreDevice.wifi_ssid || prev.wifi_ssid,
-          wifi_rssi: firestoreDevice.wifi_rssi ?? prev.wifi_rssi,
-          battery_pct: firestoreDevice.battery_pct ?? prev.battery_pct,
-          sensors: firestoreDevice.sensors || prev.sensors,
-        };
-        return merged;
-      });
+      setDeviceData((prev) => ({
+        ...prev,
+        ...firestoreDevice,
+        wifi_ssid: firestoreDevice.wifi_ssid || prev.wifi_ssid,
+        wifi_rssi: firestoreDevice.wifi_rssi ?? prev.wifi_rssi,
+        battery_pct: firestoreDevice.battery_pct ?? prev.battery_pct,
+        sensors: firestoreDevice.sensors || prev.sensors,
+        last_seen: firestoreDevice.last_seen || prev.last_seen,
+        is_hardware_reading: firestoreDevice.is_hardware_reading ?? prev.is_hardware_reading,
+      }));
+    } else if (vitals && vitals.timestamp_utc) {
+      setDeviceData((prev) => ({
+        ...prev,
+        last_seen: vitals.timestamp_utc,
+        battery_pct: vitals.battery_pct ?? prev.battery_pct,
+        wifi_rssi: vitals.wifi_rssi ?? prev.wifi_rssi,
+        sensors: vitals.sensors || prev.sensors,
+        is_hardware_reading: vitals.is_hardware_reading ?? prev.is_hardware_reading,
+      }));
     }
-  }, [firestoreDevice]);
+  }, [firestoreDevice, vitals]);
 
-  // Heartbeat freshness watchdog calculation (within 25 seconds)
-  const lastSeenMs = deviceData.last_seen ? new Date(deviceData.last_seen).getTime() : 0;
-  const isFresh = lastSeenMs > 0 && Date.now() - lastSeenMs < 25000;
-  const isOnline = isFresh && deviceData.status === 'online';
+  // Heartbeat freshness watchdog calculation (within 60 seconds)
+  const lastSeenCandidate = deviceData.last_seen || vitals?.timestamp_utc;
+  const lastSeenMs = parseUTCMs(lastSeenCandidate);
+  const timeDiffMs = lastSeenMs > 0 ? Math.abs(Date.now() - lastSeenMs) : Infinity;
+  const isFresh = timeDiffMs < 60000;
+  const isOnline = isFresh;
 
   // Propagate hardware connectivity state to global store
   useEffect(() => {

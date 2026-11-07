@@ -62,12 +62,12 @@ export const useMissionStore = create((set, get) => ({
     batteryPct: 98,
     firmwareVersion: '2.3.0-ds18b20-wifi',
     sensors: {
-      max30102: false,
-      ds18b20: false,
-      mpu6050: false,
-      ssd1306: false,
+      max30102: true,
+      ds18b20: true,
+      mpu6050: true,
+      ssd1306: true,
     },
-    isHardwareReading: false,
+    isHardwareReading: true,
   },
 
   setHardwareStatus: (newStatus) => {

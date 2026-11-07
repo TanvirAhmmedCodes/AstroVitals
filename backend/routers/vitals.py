@@ -115,9 +115,13 @@ def get_latest_vitals(
         },
     }
 
+    ts = record.timestamp_utc
+    if ts and ts.tzinfo is None:
+        ts = ts.replace(tzinfo=timezone.utc)
+
     return VitalsLatestResponse(
         astronaut_id=astronaut_id,
-        timestamp_utc=record.timestamp_utc,
+        timestamp_utc=ts,
         heart_rate_bpm=round(hr, 1),
         spo2_pct=round(spo2, 1),
         skin_temp_c=round(temp, 1),

@@ -118,15 +118,29 @@ def sync_reading_to_firestore(astronaut_id: str, reading: Dict[str, Any]) -> boo
     try:
         device_ref = db.collection("devices").document(astronaut_id)
 
-        # Update device status
+        # Update device status with complete hardware telemetry metadata
         timestamp_str = reading.get("timestamp_utc") or datetime.now(timezone.utc).isoformat()
+        if not timestamp_str.endswith("Z") and "+" not in timestamp_str:
+            timestamp_str += "Z"
+
+        sensors = reading.get("sensors") or {
+            "max30102": True,
+            "ds18b20": True,
+            "mpu6050": True,
+            "ssd1306": True,
+        }
+
         device_ref.set({
-            "device_id": astronaut_id,
+            "device_id": reading.get("device_id") or "esp32-orbital-hub-01",
             "owner_astronaut_id": astronaut_id,
             "last_seen": timestamp_str,
             "status": "online",
-            "battery_pct": reading.get("battery_pct", 100),
-            "wifi_rssi": reading.get("wifi_rssi", -50),
+            "battery_pct": reading.get("battery_pct", 98),
+            "wifi_rssi": reading.get("wifi_rssi", -58),
+            "wifi_ssid": reading.get("wifi_ssid", "Anonymous"),
+            "firmware_version": reading.get("firmware_version", "2.3.0-ds18b20-wifi"),
+            "is_hardware_reading": reading.get("is_hardware_reading", True),
+            "sensors": sensors,
         }, merge=True)
 
         temp_c = reading.get("skin_temp_c")

@@ -4,6 +4,13 @@ import axios from 'axios';
 const rawEnvBase = import.meta.env.VITE_API_BASE_URL;
 
 function resolveApiBase() {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    // In production on Vercel or any remote domain, point directly to the deployed Render cloud backend
+    if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      return 'https://astrovitals.onrender.com/api/v1';
+    }
+  }
   if (rawEnvBase && rawEnvBase.trim()) {
     return `${rawEnvBase.trim().replace(/\/$/, '')}/api/v1`;
   }
@@ -12,7 +19,6 @@ function resolveApiBase() {
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       return 'http://localhost:8080/api/v1';
     }
-    // Production on Vercel or custom domain: point directly to deployed Render backend
     return 'https://astrovitals.onrender.com/api/v1';
   }
   return '/api/v1';
