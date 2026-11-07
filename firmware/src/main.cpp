@@ -123,6 +123,21 @@ float accelZ = 1.0;
 float cumulativeRadiation_uSv = 12.50;
 float batteryPct = 98.0;
 
+// MAX30102 Moving Average & Real IBI (Inter-Beat Interval) State
+const byte RATE_SIZE = 4;
+byte rates[RATE_SIZE] = {72, 72, 72, 72};
+byte rateSpot = 0;
+unsigned long lastBeatMs = 0;
+bool firstBeatDetected = false;
+float irAC = 0.0;
+float irDC = 0.0;
+float redAC = 0.0;
+float redDC = 0.0;
+long lastRawIR = 0;
+long lastRawRed = 0;
+bool ppgStreamActive = false;
+unsigned long lastPPGStreamMs = 0;
+
 // Anomaly State & Alert Rules
 bool isAnomaly = false;
 String alertRule = "NONE";
@@ -262,9 +277,13 @@ void loop() {
       eraseNVSConfiguration();
       enterAPMode();
     } else if (cmd.equalsIgnoreCase("STATUS")) {
-      Serial.printf("[STATUS] State: %d | SSID: %s | IP: %s | RSSI: %d dBm | Temp: %.1f F (%.1f C) | Haptic: %s (Active:%d) | Anomaly: %d (%s) | FreeHeap: %u\n",
-                    currentState, WiFi.SSID().c_str(), WiFi.localIP().toString().c_str(), WiFi.RSSI(), currentSkinTempF, currentSkinTempC,
-                    hapticInverted ? "ACTIVE-LOW" : "ACTIVE-HIGH", hapticActive, isAnomaly, alertRule.c_str(), ESP.getFreeHeap());
+      Serial.printf("[STATUS] State: %d | SSID: %s | IP: %s | RSSI: %d dBm | Temp: %.1f F (%.1f C) | HR: %.1f BPM | SpO2: %.1f %% | RawIR: %ld | RawRed: %ld | Haptic: %s (Active:%d) | Anomaly: %d (%s) | FreeHeap: %lu\n",
+                    currentState, WiFi.SSID().c_str(), WiFi.localIP().toString().c_str(), WiFi.RSSI(),
+                    currentSkinTempF, currentSkinTempC, currentHR, currentSpO2, lastRawIR, lastRawRed,
+                    hapticInverted ? "ACTIVE-LOW" : "ACTIVE-HIGH", hapticActive, isAnomaly, alertRule.c_str(), (unsigned long)ESP.getFreeHeap());
+    } else if (cmd.equalsIgnoreCase("PPG") || cmd.equalsIgnoreCase("PPG_STREAM")) {
+      ppgStreamActive = !ppgStreamActive;
+      Serial.printf("[CMD] PPG real-time telemetry stream is now: %s\n", ppgStreamActive ? "ENABLED" : "DISABLED");
     } else if (cmd.equalsIgnoreCase("INVERT_HAPTIC")) {
       hapticInverted = !hapticInverted;
       setHapticPin(false);
@@ -382,7 +401,14 @@ void loop() {
     renderDisplay();
   }
 
-  delay(20);
+  // 6. Optional Serial PPG Telemetry Stream for diagnostics
+  if (ppgStreamActive && (now - lastPPGStreamMs >= 200)) {
+    lastPPGStreamMs = now;
+    Serial.printf("[PPG] IR: %ld | Red: %ld | HR: %.1f BPM | SpO2: %.1f %% | Touch: %s\n",
+                  lastRawIR, lastRawRed, currentHR, currentSpO2, (lastRawIR >= 15000) ? "YES" : "NO");
+  }
+
+  delay(5);
 }
 
 // ---------------------------------------------------------------------------
@@ -407,21 +433,94 @@ void sampleSensors(unsigned long now) {
     currentAccelMag = 0.04 + 0.01 * sin(tSec * 0.7);
   }
 
-  // B. MAX30102 PPG Optical Sensor
+  // B. MAX30102 PPG Optical Sensor (Real Physiological IBI & Ratio-of-Ratios Calculation)
   if (hasMAX30102) {
     long irValue = particleSensor.getIR();
-    if (irValue < 50000) {
-      // Finger/probe detached
+    long redValue = particleSensor.getRed();
+    lastRawIR = irValue;
+    lastRawRed = redValue;
+
+    // Finger detection threshold: ambient light without finger is < 15,000 counts
+    if (irValue < 15000) {
+      // Off-body standby: Hold standard resting baseline when no finger on optical glass
       currentHR = 72.0;
       currentSpO2 = 98.4;
-    } else if (currentAccelMag > 0.35) {
-      // Dynamic motion rejection
+      lastBeatMs = now;
+      firstBeatDetected = false;
+      irDC = 0.0;
+      redDC = 0.0;
+      irAC = 0.0;
+      redAC = 0.0;
     } else {
-      if (checkForBeat(irValue)) {
-        currentHR = 70.0 + (irValue % 20);
+      // Finger detected on sensor!
+      // 1. Dual-Path Heart Rate Detection (Maxim PBA algorithm + AC systolic peak follower)
+      bool beatDetected = checkForBeat(irValue);
+
+      // Optical AC/DC baseline extraction
+      if (irDC == 0.0) irDC = irValue;
+      if (redDC == 0.0) redDC = redValue;
+      irDC = (0.95 * irDC) + (0.05 * irValue);
+      redDC = (0.95 * redDC) + (0.05 * redValue);
+
+      float curIrAC = abs((float)irValue - irDC);
+      float curRedAC = abs((float)redValue - redDC);
+      irAC = (0.90 * irAC) + (0.10 * curIrAC);
+      redAC = (0.90 * redAC) + (0.10 * curRedAC);
+
+      // Systolic peak detector on raw AC deviation (irValue - irDC)
+      float rawAC = (float)irValue - irDC;
+      static float prevRawAC = 0.0;
+      static bool acRising = false;
+      static unsigned long lastPeakTime = 0;
+
+      if (rawAC > prevRawAC) {
+        acRising = true;
+      } else if (acRising && (prevRawAC > 15.0)) {
+        acRising = false;
+        unsigned long peakDelta = now - lastPeakTime;
+        if (peakDelta >= 380 && peakDelta <= 1500) {
+          beatDetected = true;
+          lastPeakTime = now;
+        } else if (peakDelta > 1500) {
+          lastPeakTime = now;
+        }
       }
-      currentSpO2 = 98.0 + (irValue % 3) * 0.5;
-      if (currentSpO2 > 100.0) currentSpO2 = 99.5;
+      prevRawAC = rawAC;
+
+      if (beatDetected) {
+        unsigned long deltaMs = now - lastBeatMs;
+        lastBeatMs = now;
+
+        // Physiological human range: 350ms (171 BPM) to 1500ms (40 BPM)
+        if (deltaMs >= 350 && deltaMs <= 1500) {
+          float instantBPM = 60000.0 / (float)deltaMs;
+
+          if (instantBPM >= 45.0 && instantBPM <= 175.0) {
+            if (!firstBeatDetected) {
+              for (byte i = 0; i < RATE_SIZE; i++) rates[i] = (byte)round(instantBPM);
+              firstBeatDetected = true;
+            } else {
+              rates[rateSpot++] = (byte)round(instantBPM);
+              rateSpot %= RATE_SIZE;
+            }
+
+            // Running moving average of last 4 beats for smooth, steady readout
+            float sum = 0;
+            for (byte i = 0; i < RATE_SIZE; i++) sum += rates[i];
+            currentHR = round((sum / (float)RATE_SIZE) * 10.0) / 10.0;
+          }
+        }
+      }
+
+      // 2. Real SpO2 Calculation from Red/IR AC-DC Ratio
+      if (irDC > 1000.0 && redDC > 1000.0 && irAC > 10.0) {
+        float ratio = (redAC / redDC) / (irAC / irDC);
+        // Standard empirical calibration curve for MAX30102: SpO2 = 104 - 17 * R
+        float calcSpO2 = 104.0 - 17.0 * ratio;
+        if (calcSpO2 >= 90.0 && calcSpO2 <= 100.0) {
+          currentSpO2 = round(((0.85 * currentSpO2) + (0.15 * calcSpO2)) * 10.0) / 10.0;
+        }
+      }
     }
   } else {
     // Calibrated biological respiratory sinus arrhythmia (RSA)
@@ -474,12 +573,18 @@ void scanI2CDevices() {
   Wire.beginTransmission(0x57);
   if (Wire.endTransmission() == 0) {
     if (particleSensor.begin(Wire, I2C_SPEED_FAST)) {
-      particleSensor.setup();
-      particleSensor.setPulseAmplitudeRed(0x0A);
+      byte ledBrightness = 0x24; // ~7.2mA for clear PPG vascular perfusion
+      byte sampleAverage = 4;
+      byte ledMode = 2; // 2 = Red + IR for MAX30102
+      int sampleRate = 100; // 100 Hz
+      int pulseWidth = 411; // 411 us pulse width (18-bit ADC)
+      int adcRange = 4096; // 4096 count range
+      particleSensor.setup(ledBrightness, sampleAverage, ledMode, sampleRate, pulseWidth, adcRange);
+      particleSensor.setPulseAmplitudeRed(0x24);
+      particleSensor.setPulseAmplitudeIR(0x28);
       particleSensor.setPulseAmplitudeGreen(0);
-      particleSensor.setPulseAmplitudeIR(0x0F);
       hasMAX30102 = true;
-      Serial.println("  [+] MAX30102 PPG sensor (0x57) detected and initialized.");
+      Serial.println("  [+] MAX30102 PPG sensor (0x57) detected and initialized with calibrated PPG amplitudes.");
     }
   } else {
     Serial.println("  [-] MAX30102 PPG (0x57) not detected - using calibrated bio-simulation.");
