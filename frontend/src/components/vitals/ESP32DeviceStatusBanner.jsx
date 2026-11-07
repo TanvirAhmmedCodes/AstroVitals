@@ -106,7 +106,10 @@ export default function ESP32DeviceStatusBanner({
   }, [firestoreDevice, vitals]);
 
   // Heartbeat freshness watchdog calculation (within 60 seconds)
-  const lastSeenCandidate = deviceData.last_seen || vitals?.timestamp_utc;
+  // Use authoritative server provenance timestamp when available to prevent clock skew
+  const lastSeenCandidate = (vitals?.provenance?.timestamp_utc && vitals?.provenance?.data_mode === 'live')
+    ? vitals.provenance.timestamp_utc
+    : (deviceData.last_seen || vitals?.timestamp_utc);
   const lastSeenMs = parseUTCMs(lastSeenCandidate);
   const timeDiffMs = lastSeenMs > 0 ? Math.abs(Date.now() - lastSeenMs) : Infinity;
   const isFresh = timeDiffMs < 60000;

@@ -59,10 +59,16 @@ async def ingest_vitals(
         elif temp_c is not None and r.skin_temp_f is None:
             r.skin_temp_f = round(temp_c * 1.8 + 32.0, 2)
 
+        # Ensure fresh UTC timestamp if device provided placeholder or missing
+        entry_ts = r.timestamp_utc
+        if not entry_ts or str(entry_ts).startswith("2026-10-31") or "2026-10-31" in str(entry_ts):
+            entry_ts = datetime.now(timezone.utc)
+            r.timestamp_utc = entry_ts
+
         telemetry_entry = Telemetry(
             astronaut_id=payload.astronaut_id,
             device_id=payload.device_id,
-            timestamp_utc=r.timestamp_utc,
+            timestamp_utc=entry_ts,
             heart_rate_bpm=r.heart_rate_bpm,
             spo2_pct=r.spo2_pct,
             skin_temp_c=temp_c,

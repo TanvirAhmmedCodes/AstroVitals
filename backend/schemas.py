@@ -1,10 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
 
 class TelemetryReading(BaseModel):
-    timestamp_utc: datetime
+    timestamp_utc: Optional[datetime] = None
     heart_rate_bpm: Optional[float] = Field(None, ge=30, le=250)
     spo2_pct: Optional[float] = Field(None, ge=50, le=100)
     skin_temp_c: Optional[float] = Field(None, ge=15, le=55)
