@@ -332,7 +332,6 @@ void loop() {
       if (WiFi.status() == WL_CONNECTED) {
         currentState = STATE_ONLINE;
         setStatusLEDs(true, false);
-        configTime(0, 0, "pool.ntp.org", "time.nist.gov");
         Serial.printf("[WIFI] Successfully connected! IP: %s (RSSI: %d dBm)\n",
                       WiFi.localIP().toString().c_str(), WiFi.RSSI());
         if (hasOLED) {
@@ -423,7 +422,7 @@ void sampleSensors(unsigned long now) {
     accelX = a.acceleration.x / 9.80665;
     accelY = a.acceleration.y / 9.80665;
     accelZ = a.acceleration.z / 9.80665;
-    currentAccelMag = sqrt(accelX * accelX + accelY * accelY + (accelZ - 1.0) * (accelZ - 1.0));
+    currentAccelMag = sqrt(accelX * accelX + accelY * accelY + accelZ * accelZ);
   } else {
     // Calibrated microgravity postural jitter
     float tSec = now / 1000.0;
@@ -440,8 +439,8 @@ void sampleSensors(unsigned long now) {
     lastRawIR = irValue;
     lastRawRed = redValue;
 
-    // Finger detection threshold: ambient light without finger is < 15,000 counts
-    if (irValue < 15000) {
+    // Finger detection threshold: ambient light/bench is < 30,000 counts; finger contact is 35,000 to 100,000+
+    if (irValue < 30000) {
       // Off-body standby: Hold standard resting baseline when no finger on optical glass
       currentHR = 72.0;
       currentSpO2 = 98.4;
@@ -651,40 +650,33 @@ void checkLocalThresholds() {
   alertRule = "NONE";
 
   // Check if sensor is actively worn on body vs resting on bench/standby
-  bool isWorn = false;
-  if (hasMAX30102) {
-    long irVal = particleSensor.getIR();
-    isWorn = (irVal >= 50000);
-  } else {
-    // If no MAX30102, consider on body if skin temp is above 91.4 F (33.0 C)
-    isWorn = (currentSkinTempF >= 91.4);
-  }
+  // Use lastRawIR directly without redundant I2C bus traffic
+  bool isWorn = (lastRawIR >= 30000);
 
-  // A. Motion Impact Alarm (always active, worn or unworn)
-  if (currentAccelMag > 4.0) {
+  // A. Severe Impact Alarm (require > 8.0g so normal handling does not false-alarm)
+  if (currentAccelMag > 8.0) {
     isAnomaly = true;
-    alertRule = "HIGH-G IMPACT (>4.0g)";
+    alertRule = "HIGH-G IMPACT (>8.0g)";
   }
-  // B. Thermal Extreme Alarms (always active)
-  else if (currentSkinTempF > 102.2) {
+  // B. Thermal Extreme Alarms (Severe fever above 104 F)
+  else if (currentSkinTempF > 104.0) {
     isAnomaly = true;
-    alertRule = "FEVER HIGH (>102F)";
+    alertRule = "FEVER HIGH (>104F)";
   }
-  // C. Biometric Physiological Alarms (Active ONLY when sensor is actively worn on body)
-  else if (isWorn) {
+  // C. Biometric Physiological Alarms (Active ONLY when finger is firmly on sensor and pulse is active)
+  else if (isWorn && firstBeatDetected) {
     if (currentHR < 40.0) {
       isAnomaly = true;
       alertRule = "HR LOW (<40 BPM)";
-    } else if (currentHR > 180.0) {
+    } else if (currentHR > 185.0) {
       isAnomaly = true;
-      alertRule = "HR HIGH (>180 BPM)";
-    } else if (currentSpO2 < 90.0) {
+      alertRule = "HR HIGH (>185 BPM)";
+    } else if (currentSpO2 < 88.0) {
       isAnomaly = true;
-      alertRule = "SPO2 LOW (<90%)";
-    } else if (currentSkinTempF < 88.0) {
-      // Worn on body but peripheral skin temp dropped below 88.0 F (31.1 C)
+      alertRule = "SPO2 LOW (<88%)";
+    } else if (currentSkinTempF < 80.0) {
       isAnomaly = true;
-      alertRule = "HYPOTHERMIA (<88F)";
+      alertRule = "HYPOTHERMIA (<80F)";
     }
   }
 
@@ -701,9 +693,8 @@ void checkLocalThresholds() {
     if (!hapticActive) {
       setHapticPin(false);
     }
-    if (currentState == STATE_ONLINE) {
-      setStatusLEDs(true, false);
-    }
+    // Solid green nominal LED whenever system is online and nominal
+    setStatusLEDs(true, false);
   }
 }
 
@@ -864,7 +855,7 @@ void transmitTelemetry() {
 
   HTTPClient http;
   http.begin(ingestUrl);
-  http.setTimeout(4000);
+  http.setTimeout(1200);
   http.addHeader("Content-Type", "application/json");
   http.addHeader("X-Device-Id", deviceId);
 
