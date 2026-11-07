@@ -23,7 +23,7 @@ NASA International Space Apps Challenge 2026 - Challenge 5: Health Monitoring So
 - Conceptual architecture and domain-specific mission requirements for long-duration deep space astronaut monitoring.
 - Designing the physical layered spine separating UI, API, agent, deterministic compute, and hardware ingestion.
 - Biological feature selection, clinical threshold calibration (NASA-STD-3001 standards, ALARA guidelines), and physiological interaction engineering.
-- Hardware circuit schematic, sensor selection (MAX30102, MLX90614, MPU-6050, SSD1306, haptic motor, LEDs), and hardware physics validation.
+- Hardware circuit schematic, sensor selection (MAX30102, DS18B20, MPU-6050, SSD1306, haptic motor, LEDs), and hardware physics validation.
 - Evaluation and honest auditing of machine learning performance metrics (reporting subject-level cross-validation scores without data fabrication).
 - Project presentation, UX design system, and deployment topology on Render and Vercel.
 

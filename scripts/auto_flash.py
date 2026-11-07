@@ -47,11 +47,12 @@ while time.time() - t_start < 90:
     raw = ser.readline()
     if raw:
         line = raw.decode("utf-8", errors="replace").strip()
-        if any(keyword in line for keyword in ["DOWNLOAD", "waiting for download", "boot:0x3", "boot:0xf", "boot:0x7", "boot:0x23", "boot:0x2b"]):
+        # Specifically look for download boot mode and avoid false positive on normal boot (0x13 or 0x17)
+        if any(keyword in line for keyword in ["waiting for download", "DOWNLOAD_BOOT", "DOWNLOAD(USB", "boot:0x3 ", "boot:0x7 ", "boot:0x23 ", "boot:0x2b "]) or ("DOWNLOAD" in line and "FLASH" not in line):
             print(f"\n[OK] ESP32 DOWNLOAD MODE DETECTED: {line}")
             detected = True
             break
-        elif "boot:0x13" in line:
+        elif "boot:0x13" in line or "boot:0x17" in line or "SPI_FAST_FLASH_BOOT" in line:
             print("[INFO] Normal boot detected. Remember to hold BOOT while tapping EN.")
         elif len(line) > 0 and ("AGRO" in line or "WiFi" in line or "Astro" in line or "SYSTEM" in line):
             print(f"[INFO] Chip running: {line[:50]}...")

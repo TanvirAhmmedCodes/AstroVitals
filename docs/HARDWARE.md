@@ -32,7 +32,7 @@ All active sensors and display modules share a single high-speed I2C bus on GPIO
 |-----------|--------------------|----------------------|-----------|-----------------|-----------------|
 | Microcontroller Hub | ESP32-WROOM-32 | Dual-core Tensilica LX6, 240 MHz | SoC | 3.3V / 5V USB | - |
 | Pulse Oximeter & HR | MAX30102 | Photoplethysmography (Red & IR LEDs) | I2C (0x57) | 3.3V | SDA: GPIO 21, SCL: GPIO 22, INT: GPIO 19 |
-| Infrared Core Temp | MLX90614-ESF-DCI | Non-contact thermopile (35 deg FOV) | I2C (0x5A) | 3.3V | SDA: GPIO 21, SCL: GPIO 22 |
+| Digital Skin Temp | DS18B20 | Precision digital contact temperature | 1-Wire | 3.3V / 5V | DATA: GPIO 4 (with 4.7k pull-up to 3.3V) |
 | 6-Axis Motion / IMU | MPU-6050 | Tri-axial acceleration & gyro | I2C (0x68) | 3.3V | SDA: GPIO 21, SCL: GPIO 22 |
 | Local HUD Display | SSD1306 0.96 inch | 128x64 Monochrome OLED vital display | I2C (0x3C) | 3.3V | SDA: GPIO 21, SCL: GPIO 22 |
 | Haptic Feedback Motor | 3V Coin Vibration Motor | Tactile alert notification | Digital PWM | 3.3V rail via NPN | Control: GPIO 18 (Base via 1k resistor) |
@@ -48,15 +48,14 @@ All active sensors and display modules share a single high-speed I2C bus on GPIO
        |             ESP32-WROOM-32                  |
        |                                             |
        |  [GPIO 21] ------> SDA (Shared I2C Bus) ----+---> MAX30102 (SDA)
-       |                                             +---> MLX90614 (SDA)
        |                                             +---> MPU-6050 (SDA)
        |                                             +---> SSD1306  (SDA)
        |                                             |
        |  [GPIO 22] ------> SCL (Shared I2C Bus) ----+---> MAX30102 (SCL)
-       |                                             +---> MLX90614 (SCL)
        |                                             +---> MPU-6050 (SCL)
        |                                             +---> SSD1306  (SCL)
        |                                             |
+       |  [GPIO 4 ] ------> 1-Wire Digital DATA ----+---> DS18B20 (DATA) [4.7k pull-up to 3.3V]
        |  [GPIO 19] ------> INT (MAX30102 Interrupt) |
        |  [GPIO 18] ------> Base of NPN Transistor -> Haptic Vibration Motor
        |  [GPIO 25] ------> Red Anomaly LED          |
@@ -70,14 +69,15 @@ All active sensors and display modules share a single high-speed I2C bus on GPIO
 
 ## 5. Circuit Design and Component Protection
 
-### 5.1 Shared I2C Bus Topology
+### 5.1 Shared I2C Bus Topology & 1-Wire Architecture
 - **Bus Speed**: 400 kHz (Fast Mode).
 - **Pull-Up Resistors**: 4.7k ohm pull-up resistors connect GPIO 21 (SDA) and GPIO 22 (SCL) to the 3.3V VCC rail.
 - **Device Addresses**:
   - `0x57`: MAX30102 PPG sensor.
-  - `0x5A`: MLX90614 infrared temperature sensor.
   - `0x68`: MPU-6050 6-axis motion sensor (AD0 tied to GND).
   - `0x3C`: SSD1306 128x64 OLED display.
+- **Dedicated 1-Wire Digital Bus**:
+  - DS18B20 digital skin temperature sensor communicates over a single 1-Wire digital bus on GPIO 4 with a 4.7k ohm pull-up resistor to 3.3V, operating independently from the I2C bus to eliminate clock collision.
 
 ### 5.2 Haptic Vibration Motor Driver Circuit
 - **Driver Transistor**: 2N2222 or S8050 NPN bipolar junction transistor.
@@ -97,9 +97,9 @@ All active sensors and display modules share a single high-speed I2C bus on GPIO
 - **Physics**: In microgravity, fluid shifts toward the upper body alter capillary bed compliance. Astronaut motion causes shear displacement between skin and optical photodiode, introducing high-amplitude low-frequency baseline wander in photoplethysmography (PPG) waveforms.
 - **Mitigation**: The ESP32 firmware continuously samples MPU-6050 acceleration vector magnitude (`motion_g = sqrt(ax^2 + ay^2 + az^2) / 16384.0` in +/-2g mode). When dynamic acceleration variance exceeds 0.25 g, the optical sample frame is flagged for motion rejection. Real-time SpO2 calculation uses a sliding ratio-of-ratios window over 5 consecutive heartbeats with median outlier filtering.
 
-### 6.2 MLX90614 Infrared Body Temperature Settling
-- **Physics**: The MLX90614 thermopile sensor detects 5.5 to 14 um infrared radiation across a 35-degree field-of-view (FOV). Distance variations from the skin (optimal 2 to 5 cm) and cabin air thermal currents can induce transient reading drift.
-- **Mitigation**: The firmware implements a 3-second thermal settling moving-average filter and calculates ambient temperature differentials (`T_object - T_ambient`). Unrealistic readings outside 32.0 C to 42.0 C are clamped and flagged.
+### 6.2 DS18B20 Digital Skin Temperature Settling
+- **Physics**: The DS18B20 digital thermometer provides 9 to 12-bit precision Celsius temperature measurements over a single 1-Wire digital bus. Direct skin thermal contact delivers stable biometric tracking without non-contact infrared thermal current drift.
+- **Mitigation**: The firmware implements a moving-average filter and ignores -127.0 C error codes and 85.0 C power-on reset defaults. Valid physiological readings are tracked within 30.0 C to 45.0 C.
 
 ### 6.3 MPU-6050 Motion and Tremor Feature Extraction
 - **Physics**: Microgravity eliminates constant 1g hydrostatic preload on musculature, leading to rapid motor unit deconditioning, postural micro-oscillations, and microgravity-induced tremors (typically 4 to 8 Hz).
@@ -184,7 +184,7 @@ Headers: `Content-Type: application/json`, `X-Device-Id: esp32-orbital-hub-01`
 - **Active Telemetry Draw**:
   - ESP32 microcontroller with Wi-Fi Tx: ~120 mA
   - MAX30102 active PPG LEDs: ~18 mA
-  - MLX90614 + MPU-6050 + SSD1306: ~9 mA
+  - DS18B20 + MPU-6050 + SSD1306: ~9 mA
   - Green Nominal LED (constant on): ~6.8 mA
   - Haptic Motor (pulsed during alert): ~65 mA peak
   - Total Nominal Active Draw: ~154 mA (~13.0 hours continuous streaming).
@@ -195,8 +195,8 @@ Headers: `Content-Type: application/json`, `X-Device-Id: esp32-orbital-hub-01`
 
 ## 10. Firmware Location and Required Libraries
 
-- **Source Code**: `firmware/astrovitals_esp32.ino`
-- **Toolchain**: Arduino IDE 2.x or PlatformIO
+- **Source Code**: PlatformIO `firmware/src/main.cpp` and Arduino IDE `firmware/astrovitals_esp32.ino`
+- **Toolchain**: PlatformIO or Arduino IDE 2.x
 - **Target Board**: `ESP32 Dev Module` (Flash: 4MB, Frequency: 240 MHz)
 - **Required Libraries**:
   - `WiFi.h` (Built-in ESP32 core)
@@ -204,6 +204,7 @@ Headers: `Content-Type: application/json`, `X-Device-Id: esp32-orbital-hub-01`
   - `Wire.h` (Built-in ESP32 core)
   - `ArduinoJson` (v7.x by Benoit Blanchon)
   - `SparkFun MAX3010x Pulse and Proximity Sensor Library`
-  - `Adafruit MLX90614 Library`
+  - `OneWire` (by Paul Stoffregen)
+  - `DallasTemperature` (by Miles Burton)
   - `Adafruit MPU6050` & `Adafruit Unified Sensor`
   - `Adafruit SSD1306` & `Adafruit GFX Library`

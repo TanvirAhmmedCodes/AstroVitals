@@ -16,7 +16,7 @@
 On deep-space exploration missions to the Moon or Mars, communications latency of up to 22 minutes each way prevents real-time medical consultations with terrestrial flight surgeons. If an astronaut experiences an acute arrhythmia, severe hypoxia, carbon monoxide buildup, or accelerated cardiovascular deconditioning, immediate diagnostic and clinical autonomy is required aboard the spacecraft.
 
 **AstroVitals** is a closed-loop astronaut health monitoring and clinical decision support system built to solve deep-space medical autonomy. It integrates:
-- **Physical Wearable Telemetry Hub**: An ESP32-WROOM-32 biometric unit capturing continuous photoplethysmography (MAX30102), infrared core temperature (MLX90614), and 6-axis inertial motion dynamics (MPU-6050) with tactile haptic and visual alert indicators.
+- **Physical Wearable Telemetry Hub**: An ESP32-WROOM-32 biometric unit capturing continuous photoplethysmography (MAX30102), precision digital skin temperature (DS18B20), and 6-axis inertial motion dynamics (MPU-6050) with tactile haptic and visual alert indicators.
 - **Deterministic Scientific Engine (`backend/compute/`)**: Zero-hallucination, pure mathematical evaluation of Heart Rate Variability (HRV RMSSD, SDNN), baseline deviations, non-parametric Theil-Sen trend slopes, and NASA-STD-3001 cumulative radiation limits.
 - **Harmonized Spaceflight ML Models**: Regularized clinical risk predictors trained across 36 human subjects and 299 longitudinal biological samples from four spaceflight and ground analog cohorts, validated with subject-level GroupKFold cross-validation.
 - **Unsupervised Anomaly Sentinel**: An IsolationForest boundary detector and real-time vital threshold envelope providing frontline edge alerting on both physical wearable and cloud dashboard.
@@ -47,7 +47,7 @@ AstroVitals follows a strict layered spine pattern where every layer has exactly
 ```
 +-------------------------------------------------------------------+
 |               Hardware Layer (ESP32-WROOM-32)                     |
-|  PPG (MAX30102), IR Temp (MLX90614), 6-Axis Motion (MPU-6050)     |
+|  PPG (MAX30102), Digital Temp (DS18B20), 6-Axis Motion (MPU-6050) |
 +---------------------------------┬---------------------------------+
                                   | HTTP POST /api/v1/ingest/vitals
                                   v
@@ -125,9 +125,10 @@ AstroVitals is integrated with a physical wearable hardware hub based on the Esp
 - **Microcontroller**: ESP32-WROOM-32 (240 MHz dual-core Tensilica LX6, 4MB Flash, station Wi-Fi).
 - **Shared I2C Bus (GPIO 21 SDA / GPIO 22 SCL)**:
   - **MAX30102**: Photoplethysmography pulse oximeter and heart rate sensor (I2C 0x57, INT on GPIO 19).
-  - **MLX90614**: Non-contact infrared core body temperature sensor (I2C 0x5A).
   - **MPU-6050**: 6-axis MEMS accelerometer and gyroscope for microgravity motion tracking (I2C 0x68).
   - **SSD1306**: 128x64 monochrome OLED local HUD display (I2C 0x3C).
+- **Dedicated 1-Wire Bus (GPIO 4)**:
+  - **DS18B20**: Precision digital skin temperature sensor (1-Wire digital bus on GPIO 4 with 4.7k pull-up to 3.3V).
 - **Actuators and Visual Indicators**:
   - **Haptic Vibration Motor**: Driven via 2N2222/S8050 NPN transistor base on GPIO 18 (1k resistor, 1N4148 flyback diode).
   - **Red Anomaly LED**: GPIO 25 with 220 ohm current-limiting resistor.
@@ -289,7 +290,7 @@ In accordance with NASA challenge guidelines, AstroVitals monitors upstream miss
 Detailed technical, clinical, and architectural references are maintained in the [`docs/`](docs/) directory:
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): End-to-end telemetry pipeline, coexistence model, and system Mermaid diagrams.
 - [`docs/HARDWARE_GUIDE.md`](docs/HARDWARE_GUIDE.md): ESP32 pinout, circuit wiring diagram, discrete components, and flight safety precautions.
-- [`docs/SENSOR_GUIDE.md`](docs/SENSOR_GUIDE.md): MAX30102, MLX90614, MPU-6050, SSD1306 specifications, I2C addresses, and edge fallbacks.
+- [`docs/SENSOR_GUIDE.md`](docs/SENSOR_GUIDE.md): MAX30102, DS18B20, MPU-6050, SSD1306 specifications, hardware bus mapping, and edge fallbacks.
 - [`docs/ESP32_SETUP.md`](docs/ESP32_SETUP.md): PlatformIO toolchain, serial flashing sequence, and diagnostic console commands.
 - [`docs/WIFI_SETUP.md`](docs/WIFI_SETUP.md): Universal Wi-Fi manager, Captive Portal (192.168.4.1), and NVS credential persistence.
 - [`docs/FIREBASE_SETUP.md`](docs/FIREBASE_SETUP.md): Project `astrovitals` setup, collections schema, Web SDK, and security rules.

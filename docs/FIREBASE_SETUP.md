@@ -32,12 +32,12 @@ firestore/
 │   ├── wifi_ssid: string ("Anonymous")
 │   ├── wifi_rssi: number (-56.0)
 │   ├── battery_pct: number (98.0)
-│   ├── firmware_version: string ("2.2.0-universal-wifi")
+│   ├── firmware_version: string ("2.3.0-ds18b20-wifi")
 │   ├── ip_address: string ("192.168.0.105")
 │   ├── is_hardware_reading: boolean (true | false)
 │   ├── sensors: map
 │   │   ├── max30102: boolean
-│   │   ├── mlx90614: boolean
+│   │   ├── ds18b20: boolean
 │   │   ├── mpu6050: boolean
 │   │   └── ssd1306: boolean
 │   ├── pending_alert: map (optional ground command alert)

@@ -49,15 +49,14 @@ Team Orbitrix, Dhaka, Bangladesh. Licensed under the Apache License 2.0.
 
 ## 3. Physical Sensor Detection & Degradation Issues
 
-### Issue 3.1: Serial Console Reports `[-] MAX30102 / MLX90614 / MPU-6050 not detected`
-- **Root Cause**: Sensors are not physically installed or wired yet.
-- **Expected Behavior**: This is the intended fault-tolerant behavior of AstroVitals. The firmware performs non-blocking I2C probing. If a sensor is absent, it does not freeze or crash; it automatically engages the calibrated biological baseline generator and flags `sensors: { max30102: false, ... }` and `is_hardware_reading: false`.
+### Issue 3.1: Serial Console Reports `[-] MAX30102 / DS18B20 / MPU-6050 not detected`
+- **Root Cause**: Sensors are not physically installed or wired yet, or 1-Wire data pin is floating without a pull-up resistor.
+- **Expected Behavior**: This is the intended fault-tolerant behavior of AstroVitals. The firmware performs non-blocking I2C probing and 1-Wire ROM search. If a sensor is absent, it does not freeze or crash; it automatically engages the calibrated biological baseline generator and flags `sensors: { max30102: false, ds18b20: false, ... }` and `is_hardware_reading: false`.
 - **Hardware Installation Resolution**:
   - Connect sensor VCC to ESP32 3.3V rail.
   - Connect sensor GND to common ground.
-  - Connect sensor SDA to ESP32 GPIO 21.
-  - Connect sensor SCL to ESP32 GPIO 22.
-  - Ensure 4.7 kOhm pull-up resistors are installed between SDA/SCL and 3.3V.
+  - For I2C sensors (MAX30102, MPU-6050, SSD1306): Connect SDA to ESP32 GPIO 21 and SCL to ESP32 GPIO 22.
+  - For 1-Wire temperature sensor (DS18B20): Connect DATA to ESP32 GPIO 4 with a 4.7 kOhm pull-up resistor between GPIO 4 and 3.3V. Do NOT connect DS18B20 DATA to I2C pins GPIO 21 or GPIO 22.
 
 ---
 

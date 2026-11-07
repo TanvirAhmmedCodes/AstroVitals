@@ -83,14 +83,15 @@ You can type diagnostic commands directly into the serial console:
 A successful startup on COM3 produces the following log:
 
 ```
-[SYSTEM] AstroVitals Orbital Bio-Wearable Firmware v2.2.0-universal-wifi starting...
+[SYSTEM] AstroVitals Orbital Bio-Wearable Firmware v2.3.0-ds18b20-wifi starting...
 [NVS] Loaded saved Wi-Fi SSID: Anonymous
 [NVS] Target Ingest Endpoint: http://192.168.0.105:8080/api/v1/ingest/vitals
 [HW] Scanning I2C bus on GPIO 21 (SDA) / GPIO 22 (SCL)...
-  [-] SSD1306 OLED (0x3C) not detected - headless mode.
-  [-] MAX30102 PPG (0x57) not detected - using calibrated bio-simulation.
-  [-] MLX90614 (0x5A) not detected - using calibrated thermal simulation.
-  [-] MPU-6050 (0x68) not detected - using calibrated inertial simulation.
+  [+] SSD1306 OLED (0x3C) detected and initialized.
+  [+] MAX30102 PPG sensor (0x57) detected and initialized.
+  [+] MPU-6050 6-Axis IMU (0x68) detected and initialized.
+[HW] Scanning 1-Wire bus on GPIO 4 for DS18B20 temperature sensor...
+  [+] DS18B20 1-Wire Digital Thermometer detected on GPIO 4.
 [WIFI] Connecting to network: Anonymous
 [WIFI] Successfully connected! IP: 192.168.0.105 (RSSI: -56 dBm)
 [TIME] Synchronizing NTP network time with pool.ntp.org...

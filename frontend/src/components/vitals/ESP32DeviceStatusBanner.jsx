@@ -5,7 +5,7 @@
  * - Operating mode status (Live Hardware vs Demonstration Simulation)
  * - Dynamic hardware connection watchdog (25-second freshness threshold)
  * - Wi-Fi SSID, RSSI signal meter, battery level, and IP address
- * - Individual physical I2C sensor detection status (MAX30102, MLX90614, MPU-6050, SSD1306)
+ * - Individual physical I2C and 1-Wire sensor detection status (MAX30102, DS18B20, MPU-6050, SSD1306)
  * - Two-way ground-to-astronaut command actuation (Test Haptic Alarm)
  *
  * Team Orbitrix - NASA Space Apps Challenge 2026
@@ -55,12 +55,12 @@ export default function ESP32DeviceStatusBanner({
     wifi_ssid: 'Anonymous',
     wifi_rssi: -56,
     battery_pct: 98,
-    firmware_version: '2.2.0-universal-wifi',
+    firmware_version: '2.3.0-ds18b20-wifi',
     ip_address: '192.168.0.105',
     last_seen: new Date().toISOString(),
     sensors: {
       max30102: false,
-      mlx90614: false,
+      ds18b20: false,
       mpu6050: false,
       ssd1306: false,
     },
@@ -331,19 +331,19 @@ export default function ESP32DeviceStatusBanner({
               </strong>
             </span>
 
-            {/* MLX90614 Infrared Skin Temp */}
+            {/* DS18B20 Digital Skin Temp */}
             <span
               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono ${
-                deviceData.sensors?.mlx90614
+                (deviceData.sensors?.ds18b20 || deviceData.sensors?.mlx90614)
                   ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
                   : 'bg-white/5 text-[#A8B2C1] border border-white/10'
               }`}
-              title="MLX90614 Non-Contact Infrared Thermometer (0x5A)"
+              title="DS18B20 High-Precision Digital Temperature Sensor (1-Wire GPIO 4)"
             >
               <Thermometer size={10} />
-              <span>MLX90614 IR:</span>
-              <strong className={deviceData.sensors?.mlx90614 ? 'text-emerald-300' : 'text-amber-400'}>
-                {deviceData.sensors?.mlx90614 ? 'CONNECTED (0x5A)' : 'PENDING INSTALL (THERMAL BASELINE)'}
+              <span>DS18B20 Temp:</span>
+              <strong className={(deviceData.sensors?.ds18b20 || deviceData.sensors?.mlx90614) ? 'text-emerald-300' : 'text-amber-400'}>
+                {(deviceData.sensors?.ds18b20 || deviceData.sensors?.mlx90614) ? 'CONNECTED (1-WIRE)' : 'PENDING INSTALL (THERMAL BASELINE)'}
               </strong>
             </span>
 

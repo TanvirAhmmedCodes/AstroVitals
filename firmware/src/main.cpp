@@ -19,8 +19,9 @@
  *     tactile haptic motor and OLED HUD alarm.
  *
  * Pinout Mapping (Single Source of Truth from docs/HARDWARE.md):
- *   - I2C SDA: GPIO 21 (Shared bus: MAX30102, MLX90614, MPU-6050, SSD1306)
+ *   - I2C SDA: GPIO 21 (Shared bus: MAX30102, MPU-6050, SSD1306)
  *   - I2C SCL: GPIO 22 (Shared bus)
+ *   - DS18B20 1-Wire DATA: GPIO 4 (Dedicated Digital Bus with 4.7k pull-up)
  *   - MAX30102 INT: GPIO 19
  *   - Haptic Vibration Motor: GPIO 18 (via NPN transistor driver)
  *   - Red Anomaly LED: GPIO 25 (via 220 ohm resistor)
@@ -41,13 +42,14 @@
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
-#include <Adafruit_MLX90614.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 #include "MAX30105.h"
 #include "heartRate.h"
 #include <ArduinoJson.h>
 
 // Version & Defaults
-const char* FIRMWARE_VERSION = "2.2.0-universal-wifi";
+const char* FIRMWARE_VERSION = "2.3.0-ds18b20-wifi";
 const char* DEFAULT_WIFI_SSID = "Anonymous";
 const char* DEFAULT_WIFI_PASS = "R0bins0nWiFi195";
 const char* DEFAULT_INGEST_URL = "https://astrovitals.onrender.com/api/v1/ingest/vitals";
@@ -58,6 +60,7 @@ const char* AP_SSID = "AstroVitals-Hub-Setup";
 // Hardware Pinout Definitions
 #define I2C_SDA_PIN 21
 #define I2C_SCL_PIN 22
+#define DS18B20_PIN 4
 #define MAX30102_INT_PIN 19
 #define HAPTIC_PIN 18
 #define LED_RED_ANOMALY 25
@@ -97,13 +100,15 @@ Preferences preferences;
 // Hardware Sensor Instances & Detection Flags
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 MAX30105 particleSensor;
-Adafruit_MLX90614 mlx = Adafruit_MLX90614();
+OneWire oneWire(DS18B20_PIN);
+DallasTemperature ds18b20(&oneWire);
 Adafruit_MPU6050 mpu;
 
 bool hasOLED = false;
 bool hasMAX30102 = false;
-bool hasMLX = false;
+bool hasDS18B20 = false;
 bool hasMPU = false;
+int activeDSPin = DS18B20_PIN;
 
 // Filtered Vitals Cache
 float currentHR = 72.0;
@@ -367,11 +372,12 @@ void sampleSensors(unsigned long now) {
     currentSpO2 = 98.4 + 0.3 * sin(tSec * 0.2);
   }
 
-  // C. MLX90614 Non-Contact Infrared Body Temperature
-  if (hasMLX) {
-    float objectTemp = mlx.readObjectTempC();
-    if (!isnan(objectTemp) && objectTemp > 30.0 && objectTemp < 45.0) {
-      currentSkinTemp = objectTemp;
+  // C. DS18B20 High-Precision Digital Skin Temperature
+  if (hasDS18B20) {
+    ds18b20.requestTemperatures();
+    float tempC = ds18b20.getTempCByIndex(0);
+    if (!isnan(tempC) && tempC > 20.0 && tempC < 50.0 && tempC != 85.0 && tempC != -127.0) {
+      currentSkinTemp = tempC;
     }
   } else {
     float tSec = now / 1000.0;
@@ -392,7 +398,7 @@ void scanI2CDevices() {
       display.setTextSize(1);
       display.setTextColor(SSD1306_WHITE);
       display.setCursor(0, 10);
-      display.println("ASTROVITALS HUB v2.1");
+      display.println("ASTROVITALS HUB v2.3");
       display.println("Scanning hardware...");
       display.display();
     }
@@ -415,15 +421,37 @@ void scanI2CDevices() {
     Serial.println("  [-] MAX30102 PPG (0x57) not detected - using calibrated bio-simulation.");
   }
 
-  // Probe MLX90614 Infrared Temp (0x5A)
-  Wire.beginTransmission(0x5A);
-  if (Wire.endTransmission() == 0) {
-    if (mlx.begin()) {
-      hasMLX = true;
-      Serial.println("  [+] MLX90614 IR Temp sensor (0x5A) detected and initialized.");
-    }
+  // Probe DS18B20 1-Wire Digital Temp (GPIO 4 by default, with alternate pin scan)
+  Serial.printf("[HW] Scanning 1-Wire DS18B20 on GPIO %d...\n", DS18B20_PIN);
+  pinMode(DS18B20_PIN, INPUT_PULLUP);
+  ds18b20.begin();
+  int dsCount = ds18b20.getDeviceCount();
+  if (dsCount > 0) {
+    hasDS18B20 = true;
+    activeDSPin = DS18B20_PIN;
+    ds18b20.setResolution(10);
+    Serial.printf("  [+] DS18B20 Digital Temp sensor detected on GPIO %d (%d device(s) found).\n", DS18B20_PIN, dsCount);
   } else {
-    Serial.println("  [-] MLX90614 (0x5A) not detected - using calibrated thermal simulation.");
+    const int ALT_PINS[] = {23, 19, 15, 27, 32, 33};
+    for (int p : ALT_PINS) {
+      pinMode(p, INPUT_PULLUP);
+      OneWire altWire(p);
+      DallasTemperature altDS(&altWire);
+      altDS.begin();
+      if (altDS.getDeviceCount() > 0) {
+        hasDS18B20 = true;
+        activeDSPin = p;
+        oneWire.begin(p);
+        ds18b20.setOneWire(&oneWire);
+        ds18b20.begin();
+        ds18b20.setResolution(10);
+        Serial.printf("  [+] DS18B20 Digital Temp sensor detected on alternate GPIO %d!\n", p);
+        break;
+      }
+    }
+    if (!hasDS18B20) {
+      Serial.printf("  [-] DS18B20 not detected on GPIO %d - connect DATA wire to GPIO 4 (with 4.7k pull-up to 3.3V). Using calibrated thermal simulation.\n", DS18B20_PIN);
+    }
   }
 
   // Probe MPU-6050 IMU (0x68)
@@ -580,7 +608,7 @@ void transmitTelemetry() {
     return;
   }
 
-  bool hasAnyPhysicalSensor = (hasMAX30102 || hasMLX || hasMPU);
+  bool hasAnyPhysicalSensor = (hasMAX30102 || hasDS18B20 || hasMPU);
 
   JsonDocument doc;
   doc["device_id"] = deviceId;
@@ -591,9 +619,10 @@ void transmitTelemetry() {
 
   JsonObject devSensors = doc["sensors"].to<JsonObject>();
   devSensors["max30102"] = hasMAX30102;
-  devSensors["mlx90614"] = hasMLX;
+  devSensors["ds18b20"] = hasDS18B20;
   devSensors["mpu6050"] = hasMPU;
   devSensors["ssd1306"] = hasOLED;
+  devSensors["mlx90614"] = false;
 
   // Obtain dynamic ISO8601 timestamp via NTP if available
   time_t nowTime;
@@ -626,9 +655,10 @@ void transmitTelemetry() {
 
   JsonObject rSensors = r["sensors"].to<JsonObject>();
   rSensors["max30102"] = hasMAX30102;
-  rSensors["mlx90614"] = hasMLX;
+  rSensors["ds18b20"] = hasDS18B20;
   rSensors["mpu6050"] = hasMPU;
   rSensors["ssd1306"] = hasOLED;
+  rSensors["mlx90614"] = false;
 
   String jsonString;
   serializeJson(doc, jsonString);
@@ -874,7 +904,8 @@ void handleStatus() {
   doc["free_heap"] = ESP.getFreeHeap();
   doc["uptime_sec"] = millis() / 1000;
   doc["sensors"]["max30102"] = hasMAX30102;
-  doc["sensors"]["mlx90614"] = hasMLX;
+  doc["sensors"]["ds18b20"] = hasDS18B20;
+  doc["sensors"]["mlx90614"] = false;
   doc["sensors"]["mpu6050"] = hasMPU;
   doc["sensors"]["ssd1306"] = hasOLED;
 

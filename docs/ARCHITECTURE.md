@@ -24,7 +24,7 @@ AstroVitals solves deep-space medical autonomy using a layered spine pattern wit
 ```mermaid
 flowchart TD
     subgraph EdgeHardware["1. Embedded Edge Wearable (ESP32-WROOM-32)"]
-        Sensors["Physical I2C Sensors\n- MAX30102 Optical PPG (0x57)\n- MLX90614 IR Temp (0x5A)\n- MPU-6050 6-Axis IMU (0x68)\n- SSD1306 Graphic OLED (0x3C)"]
+        Sensors["Physical Sensors\n- MAX30102 Optical PPG (I2C 0x57)\n- DS18B20 Digital Temp (1-Wire GPIO 4)\n- MPU-6050 6-Axis IMU (I2C 0x68)\n- SSD1306 Graphic OLED (I2C 0x3C)"]
         SafeScan["Safe I2C Probing & Health Scan"]
         Fallbacks["Deterministic Bio-Calibrated Edge Baseline\n(Active when physical sensor absent)"]
         WiFiMgr["Universal Wi-Fi Manager\n(NVS Preferences + 192.168.4.1 Captive Portal)"]

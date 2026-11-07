@@ -26,7 +26,7 @@ This document performs an exhaustive inventory of every dataset, model artifact,
 | Cognitive Normative Scores | `models/cognitive_norms.json` | Yes | Yes (Cognitive Router) | Kept. Derived from published ESA COGNISPACE psychomotor vigilance norms. |
 | Evaluation Metrics | `models/metrics.json` | Yes | Yes (Test Suite & UI) | Kept. Stores full GroupKFold scores, fold splits, and inference parity references. |
 | Wearable Hardware Simulator | `scripts/simulate_wearable.py` | Fixture replay / synthetic | Yes (Local Dev / Demo) | Kept. Explicitly labeled as synthetic telemetry simulator for hardware-absent mode. |
-| ESP32 Arduino Firmware | `firmware/astrovitals_esp32.ino` | Real C++ firmware | Ready for hardware flash | Updated. Connects MAX30102, MLX90614, MPU-6050, SSD1306, Haptic Motor (GPIO 18), LEDs (GPIO 25/26). |
+| ESP32 Arduino Firmware | `firmware/astrovitals_esp32.ino` | Real C++ firmware | Ready for hardware flash | Updated. Connects MAX30102, DS18B20, MPU-6050, SSD1306, Haptic Motor (GPIO 18), LEDs (GPIO 25/26). |
 | Offline Demo Fixtures | `demo_fixtures/` | Real snapshot fixtures | Yes (`safe_fetch.py`) | Kept committed. Replays committed JSON fixtures when OFFLINE=1 or offline mode. |
 | Canonical ML Models | `models/` | Real (Trained) | Yes (`model_registry.py`) | Kept committed. 9 frozen artifacts at repo root. Duplicate files in `backend/models/archive/` purged. |
 

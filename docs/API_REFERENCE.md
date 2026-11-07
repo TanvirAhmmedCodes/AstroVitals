@@ -36,13 +36,13 @@ X-Device-Id: esp32-orbital-hub-01
   "device_id": "esp32-orbital-hub-01",
   "astronaut_id": "astronaut-A",
   "wifi_ssid": "Anonymous",
-  "firmware_version": "2.2.0-universal-wifi",
-  "is_hardware": false,
+  "firmware_version": "2.3.0-ds18b20-wifi",
+  "is_hardware": true,
   "sensors": {
-    "max30102": false,
-    "mlx90614": false,
-    "mpu6050": false,
-    "ssd1306": false
+    "max30102": true,
+    "ds18b20": true,
+    "mpu6050": true,
+    "ssd1306": true
   },
   "readings": [
     {
@@ -58,12 +58,12 @@ X-Device-Id: esp32-orbital-hub-01
       "battery_pct": 98.0,
       "wifi_rssi": -56.0,
       "buffered": false,
-      "is_hardware_reading": false,
+      "is_hardware_reading": true,
       "sensors": {
-        "max30102": false,
-        "mlx90614": false,
-        "mpu6050": false,
-        "ssd1306": false
+        "max30102": true,
+        "ds18b20": true,
+        "mpu6050": true,
+        "ssd1306": true
       }
     }
   ]
@@ -101,12 +101,12 @@ X-Device-Id: esp32-orbital-hub-01
   "battery_pct": 98.0,
   "wifi_rssi": -56.0,
   "wifi_ssid": "Anonymous",
-  "firmware_version": "2.2.0-universal-wifi",
+  "firmware_version": "2.3.0-ds18b20-wifi",
   "sensors": {
-    "max30102": false,
-    "mlx90614": false,
-    "mpu6050": false,
-    "ssd1306": false
+    "max30102": true,
+    "ds18b20": true,
+    "mpu6050": true,
+    "ssd1306": true
   },
   "is_hardware_reading": false
 }

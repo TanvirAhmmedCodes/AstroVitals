@@ -19,4 +19,4 @@ Use when analyzing real-time or recorded vitals streams, detecting physiological
 2. Deterministic Science: All statistical metrics (Mann-Kendall, Theil-Sen slope), baseline deviations (Z-scores), and radiation accumulation must be computed in backend/compute/. The agent orchestrates and explains only.
 3. No Medical Diagnoses: Frame findings as "physiological deviations", "rule triggers", or "clinical threshold violations" rather than medical diagnoses.
 4. Provenance Verification: Every numeric value reported to users must be grounded in tool execution carrying dataset_id and source_url. Run cite_check before presentation.
-5. Hardware Physics Awareness: Account for sensor limitations (MPU-6050 motion artifact rejection, MLX90614 infrared settling time, haptic alert debounce).
+5. Hardware Physics Awareness: Account for sensor limitations (MPU-6050 motion artifact rejection, DS18B20 1-Wire conversion time, haptic alert debounce).

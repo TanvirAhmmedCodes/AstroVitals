@@ -117,7 +117,7 @@ async def ingest_vitals(
     rad_status = RadiationModel.evaluate(latest_rad)
     sensors_dict = getattr(latest_reading, "sensors", None) or getattr(payload, "sensors", None) or {
         "max30102": False,
-        "mlx90614": False,
+        "ds18b20": False,
         "mpu6050": False,
         "ssd1306": False,
     }

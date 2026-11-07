@@ -8,14 +8,14 @@ Team Orbitrix, Dhaka, Bangladesh. Licensed under the Apache License 2.0.
 
 ## 1. I2C Bus Architecture & Addressing Matrix
 
-AstroVitals links all onboard physiological transducers across a single, conflict-free 400 kHz fast-mode I2C bus:
+AstroVitals links onboard physiological transducers across a high-speed conflict-free I2C bus and a dedicated 1-Wire digital bus:
 
-| Sensor Module | Primary Function | Standard I2C Address | Configurable Pins | Bus Speed | Pull-Up Recommendation |
+| Sensor Module | Primary Function | Bus Interface / Address | Pinout Mapping | Bus Speed | Pull-Up Recommendation |
 |:---|:---|:---:|:---:|:---:|:---:|
-| **SSD1306 OLED** | Local Astronaut HUD | `0x3C` | SA0 pull-up -> 0x3D | 400 kHz | Internal on breakout |
-| **MAX30102 PPG** | Pulse Oximetry & Heart Rate | `0x57` | Hardwired factory address | 400 kHz | 4.7 kOhm external |
-| **MLX90614-DCI** | Non-Contact Infrared Temp | `0x5A` | Factory EEPROM programmed | 100-400 kHz | 4.7 kOhm external |
-| **MPU-6050 IMU** | 6-Axis Microgravity Dynamics | `0x68` | AD0 pull-up -> 0x69 | 400 kHz | Internal on breakout |
+| **SSD1306 OLED** | Local Astronaut HUD | I2C (`0x3C`) | GPIO 21 (SDA), GPIO 22 (SCL) | 400 kHz | Internal on breakout |
+| **MAX30102 PPG** | Pulse Oximetry & Heart Rate | I2C (`0x57`) | GPIO 21 (SDA), GPIO 22 (SCL), INT 19 | 400 kHz | 4.7 kOhm external |
+| **MPU-6050 IMU** | 6-Axis Microgravity Dynamics | I2C (`0x68`) | GPIO 21 (SDA), GPIO 22 (SCL) | 400 kHz | Internal on breakout |
+| **DS18B20 Digital** | Precision Skin Contact Temp | 1-Wire Digital Bus | GPIO 4 (Dedicated DATA) | ~16 kbps | 4.7 kOhm external to 3.3V |
 
 There are zero address collisions across the bus.
 
@@ -29,11 +29,11 @@ There are zero address collisions across the bus.
 - **Sampling Rate**: Configured at 100 Hz sampling with an LED pulse width of 411 microseconds and 18-bit ADC resolution.
 - **Motion Artifact Rejection**: Integrated dynamic baseline tracking filters optical noise caused by physical motion. When the MPU-6050 detects acceleration greater than 0.35 g, the heart rate algorithm locks onto previous high-confidence peak intervals to prevent false tachycardia spikes.
 
-### 2.2 Melexis MLX90614 Non-Contact Infrared Thermometer
-- **Principle**: Stefan-Boltzmann thermopile radiation. Detects infrared energy emitted by the skin in the 5.5 to 14 micrometer spectrum.
-- **Transduction Physics**: Converts radiated thermal energy to microvolt potentials, amplified by a low-noise 17-bit chopper-stabilized ADC.
-- **Medical Accuracy**: Calibrated to +/- 0.2 C precision within the human physiological zone (32.0 C to 42.0 C).
-- **Dual-Zone Detection**: Simultaneously reads both object (skin surface) and ambient temperature, enabling compensatory environmental thermal filtering.
+### 2.2 Dallas DS18B20 High-Precision Digital Skin Thermometer
+- **Principle**: Solid-state bandgap temperature sensing with internal 12-bit ADC communicating over a single 1-Wire digital bus.
+- **Transduction Physics**: Converts direct epidermal thermal conduction into calibrated digital Celsius words, eliminating analog noise and non-contact IR thermal current drift.
+- **Medical Accuracy**: Calibrated to +/- 0.5 C precision from -10 C to +85 C (0.0625 C resolution in 12-bit mode; 0.25 C in 10-bit fast mode).
+- **Dedicated 1-Wire Protocol**: Operates on a dedicated digital GPIO line (GPIO 4) with a 4.7k pull-up resistor to 3.3V, operating independently from the I2C bus to eliminate bus contention.
 
 ### 2.3 TDK InvenSense MPU-6050 6-Axis Motion Tracking
 - **Principle**: Micro-Electro-Mechanical Systems (MEMS) capacitive sensing with internal Digital Motion Processor (DMP).
@@ -76,7 +76,7 @@ When a physical sensor is absent, the firmware executes a mathematically validat
    `Accel_Mag(t) = 0.04 + 0.01 * sin(t * 0.70) [g]`
 
 Every packet transmitted under this condition carries:
-- `sensors: { max30102: false, mlx90614: false, mpu6050: false, ssd1306: false }`
+- `sensors: { max30102: false, ds18b20: false, mpu6050: false, ssd1306: false }`
 - `is_hardware_reading: false`
 
 This ensures total transparency across both edge and cloud layers.
@@ -87,7 +87,7 @@ This ensures total transparency across both edge and cloud layers.
 
 For optimal biometric fidelity aboard the spacecraft:
 - **MAX30102 (PPG)**: Inner wrist overlying the radial artery, or integrated into a contoured finger cuff with spring-loaded silicone backing to maintain consistent capillary contact.
-- **MLX90614 (IR)**: Directed toward the temporal artery on the forehead (0.5 to 1.0 cm distance) or the volar aspect of the wrist.
+- **DS18B20 (Skin Temp)**: Flat TO-92 or waterproof probe tip placed in direct, firm contact with inner wrist or sternum skin with thermal transfer tape.
 - **MPU-6050 (IMU)**: Mounted securely at the dorsal center of the wearable enclosure, aligning the X-axis along the astronaut's forearm vector.
 - **SSD1306 (OLED)**: Top face of the wrist unit, tilted at 15 degrees for rapid glancing during EVA operations.
 

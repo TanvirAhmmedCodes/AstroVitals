@@ -60,10 +60,10 @@ export const useMissionStore = create((set, get) => ({
     wifiRSSI: -56,
     ipAddress: '192.168.0.105',
     batteryPct: 98,
-    firmwareVersion: '2.2.0-universal-wifi',
+    firmwareVersion: '2.3.0-ds18b20-wifi',
     sensors: {
       max30102: false,
-      mlx90614: false,
+      ds18b20: false,
       mpu6050: false,
       ssd1306: false,
     },

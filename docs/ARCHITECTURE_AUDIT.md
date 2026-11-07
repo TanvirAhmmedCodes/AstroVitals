@@ -141,7 +141,7 @@ AstroVitals will not be rebuilt from scratch. It is upgraded by establishing phy
 - Gap Analysis:
   - Missing standalone Arduino/ESP32 firmware file in the repo.
   - Missing ASCII wiring schematic and pinout guide.
-  - Sensor physics (MAX30102 motion artifacts, MLX90614 field of view, MPU-6050 motion rejection, haptic alert driver) not documented.
+  - Sensor physics (MAX30102 motion artifacts, DS18B20 1-Wire conversion time, MPU-6050 motion rejection, haptic alert driver) not documented.
 - Planned Upgrade:
   - Create `firmware/astrovitals_esp32.ino`.
   - Create `docs/HARDWARE.md` and update `README.md` with complete wiring, power budget, and sensor physics.

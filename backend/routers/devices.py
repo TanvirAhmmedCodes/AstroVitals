@@ -283,7 +283,7 @@ def get_device_status(device_id: str):
                 if "sensors" not in data:
                     data["sensors"] = {
                         "max30102": False,
-                        "mlx90614": False,
+                        "ds18b20": False,
                         "mpu6050": False,
                         "ssd1306": False,
                     }
@@ -300,10 +300,10 @@ def get_device_status(device_id: str):
         "battery_pct": 98.0,
         "wifi_rssi": -48.0,
         "wifi_ssid": "Nominal Wi-Fi",
-        "firmware_version": "2.1.0-orbital",
+        "firmware_version": "2.3.0-ds18b20-wifi",
         "sensors": {
             "max30102": False,
-            "mlx90614": False,
+            "ds18b20": False,
             "mpu6050": False,
             "ssd1306": False,
         },
