@@ -185,7 +185,7 @@ export default function LiveVitals() {
       time: timeStr,
       hr: Math.round(item.heart_rate_bpm || 72),
       spo2: Math.round(item.spo2_pct || 98),
-      temp: parseFloat((item.skin_temp_c || 36.5).toFixed(1)),
+      temp: parseFloat(((item.skin_temp_f || (item.skin_temp_c ? item.skin_temp_c * 1.8 + 32.0 : 97.7))).toFixed(1)),
       motion: parseFloat((item.accel_magnitude_g || 0.28).toFixed(2)),
       baselineHr: 72,
       baselineSpo2: 98,
@@ -314,7 +314,7 @@ export default function LiveVitals() {
               <span className="w-2 h-2 rounded-full bg-[#4DA6FF]" /> SpO2 (%)
             </span>
             <span className="flex items-center gap-1 text-[#FFA94D]">
-              <span className="w-2 h-2 rounded-full bg-[#FFA94D]" /> Temp (°C)
+              <span className="w-2 h-2 rounded-full bg-[#FFA94D]" /> Temp (°F)
             </span>
             <span className="flex items-center gap-1 text-[#4ADE80]">
               <span className="w-2 h-2 rounded-full bg-[#4ADE80]" /> Motion (g)
@@ -413,7 +413,7 @@ export default function LiveVitals() {
                 <th className="py-2 px-3">TIMESTAMP (UTC)</th>
                 <th className="py-2 px-3">HR (BPM)</th>
                 <th className="py-2 px-3">SpO2 (%)</th>
-                <th className="py-2 px-3">TEMP (°C)</th>
+                <th className="py-2 px-3">TEMP (°F)</th>
                 <th className="py-2 px-3">STATE</th>
                 <th className="py-2 px-3">RAD DOSE (µSv)</th>
                 <th className="py-2 px-3">BUFFER</th>
@@ -435,7 +435,7 @@ export default function LiveVitals() {
                       {Math.round(row.spo2_pct || 98)}
                     </td>
                     <td className="py-2 px-3 text-[#FFA94D]">
-                      {(row.skin_temp_c || 36.5).toFixed(1)}
+                      {(row.skin_temp_f || (row.skin_temp_c ? row.skin_temp_c * 1.8 + 32.0 : 97.7)).toFixed(1)}
                     </td>
                     <td className="py-2 px-3 uppercase text-[#4ADE80] font-semibold">
                       {row.activity_state || 'rest'}

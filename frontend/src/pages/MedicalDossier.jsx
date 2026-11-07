@@ -51,7 +51,7 @@ export default function MedicalDossier() {
   // Extract real numbers or fallbacks
   const hrMean = summary?.hr_mean_24h ?? 72.4;
   const spo2Mean = summary?.spo2_mean_24h ?? 98.2;
-  const tempMean = summary?.temp_mean_24h ?? 36.5;
+  const tempMean = summary?.temp_mean_24h ? Number((summary.temp_mean_24h * 1.8 + 32.0).toFixed(1)) : 97.7;
   const rtMean = summary?.reaction_time_mean_ms ?? 268.0;
   const moodScore = summary?.mood_score_10 ?? 8.2;
   const radDoseMsv = summary?.career_radiation_mSv ?? 12.5;
@@ -117,7 +117,7 @@ export default function MedicalDossier() {
                 1. Cardiovascular & Microgravity Hemodynamics
               </h4>
               <p className="text-[#A8B2C1] font-body leading-relaxed">
-                Resting heart rate mean: <strong className="text-white">{hrMean} BPM</strong>. SpO2 mean: <strong className="text-white">{spo2Mean}%</strong>. Skin temp: <strong className="text-white">{tempMean}°C</strong>. Fluid cephalic shift adaptation completed. Validated BayesianRidge model (GroupKFold R² = 0.673) confirms adherence to multi-cohort baseline bounds without synthetic distortion.
+                Resting heart rate mean: <strong className="text-white">{hrMean} BPM</strong>. SpO2 mean: <strong className="text-white">{spo2Mean}%</strong>. Skin temp: <strong className="text-white">{tempMean}°F</strong>. Fluid cephalic shift adaptation completed. Validated BayesianRidge model (GroupKFold R² = 0.673) confirms adherence to multi-cohort baseline bounds without synthetic distortion.
               </p>
             </div>
 

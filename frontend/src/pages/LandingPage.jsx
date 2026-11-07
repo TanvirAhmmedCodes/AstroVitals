@@ -48,7 +48,7 @@ export default function LandingPage() {
   };
   const [simHeartRate, setSimHeartRate] = useState(72.4);
   const [simSpO2, setSimSpO2] = useState(98.3);
-  const [simTemp, setSimTemp] = useState(36.52);
+  const [simTemp, setSimTemp] = useState(97.7);
   const [simActivity, setSimActivity] = useState('rest');
 
   const { scrollYProgress } = useScroll();
@@ -477,7 +477,7 @@ export default function LandingPage() {
                 <span className="font-hud text-3xl sm:text-4xl font-bold text-[#E8EDF5] font-tabular">
                   {simTemp}
                 </span>
-                <span className="text-xs font-mono text-[#F59E0B]">°C</span>
+                <span className="text-xs font-mono text-[#F59E0B]">°F</span>
               </div>
               <span className="text-[10px] font-mono text-[#A8B2C1] block">● HOMEOSTATIC</span>
             </div>

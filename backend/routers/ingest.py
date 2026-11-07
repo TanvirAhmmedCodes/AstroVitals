@@ -53,13 +53,19 @@ async def ingest_vitals(
 
     # Process all readings
     for r in payload.readings:
+        temp_c = r.skin_temp_c
+        if temp_c is None and r.skin_temp_f is not None:
+            temp_c = round((r.skin_temp_f - 32.0) * 5.0 / 9.0, 2)
+        elif temp_c is not None and r.skin_temp_f is None:
+            r.skin_temp_f = round(temp_c * 1.8 + 32.0, 2)
+
         telemetry_entry = Telemetry(
             astronaut_id=payload.astronaut_id,
             device_id=payload.device_id,
             timestamp_utc=r.timestamp_utc,
             heart_rate_bpm=r.heart_rate_bpm,
             spo2_pct=r.spo2_pct,
-            skin_temp_c=r.skin_temp_c,
+            skin_temp_c=temp_c,
             accel_x_g=r.accel_x_g,
             accel_y_g=r.accel_y_g,
             accel_z_g=r.accel_z_g,

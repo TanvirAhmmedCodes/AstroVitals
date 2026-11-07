@@ -7,7 +7,8 @@ class TelemetryReading(BaseModel):
     timestamp_utc: datetime
     heart_rate_bpm: Optional[float] = Field(None, ge=30, le=250)
     spo2_pct: Optional[float] = Field(None, ge=50, le=100)
-    skin_temp_c: Optional[float] = Field(None, ge=25, le=45)
+    skin_temp_c: Optional[float] = Field(None, ge=15, le=55)
+    skin_temp_f: Optional[float] = Field(None, ge=50, le=135)
     accel_x_g: Optional[float] = 0.0
     accel_y_g: Optional[float] = 0.0
     accel_z_g: Optional[float] = 1.0
@@ -49,6 +50,7 @@ class VitalsLatestResponse(BaseModel):
     heart_rate_bpm: Optional[float] = 72.0
     spo2_pct: Optional[float] = 98.0
     skin_temp_c: Optional[float] = 36.5
+    skin_temp_f: Optional[float] = 97.7
     activity_state: str = "rest"
     motion_g: float = 0.02
     radiation_dose_uSv_cumulative: float = 12.5
@@ -57,6 +59,7 @@ class VitalsLatestResponse(BaseModel):
     hr_delta_pct: float = 0.0
     spo2_delta_pct: float = 0.0
     temp_delta_c: float = 0.0
+    temp_delta_f: float = 0.0
     status: str = "nominal"  # nominal, caution, warning, critical
     is_anomaly: bool = False
     provenance: Optional[Dict[str, Any]] = None
@@ -67,6 +70,7 @@ class VitalsHistoryItem(BaseModel):
     heart_rate_bpm: Optional[float]
     spo2_pct: Optional[float]
     skin_temp_c: Optional[float]
+    skin_temp_f: Optional[float] = None
     motion_g: Optional[float]
     activity_state: Optional[str]
     radiation_dose_uSv: Optional[float]

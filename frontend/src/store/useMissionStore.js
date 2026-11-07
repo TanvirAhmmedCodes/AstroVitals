@@ -116,6 +116,7 @@ export const useMissionStore = create((set, get) => ({
     heart_rate_bpm: 72,
     spo2_pct: 98,
     skin_temp_c: 36.5,
+    skin_temp_f: 97.7,
     accel_magnitude_g: 0.28,
     activity_state: 'rest',
     radiation_dose_uSv_cumulative: 12500,
@@ -128,10 +129,13 @@ export const useMissionStore = create((set, get) => ({
   },
   vitalsBuffer: [],
   setVitals: (newVitals) => {
+    const tempF = newVitals.skin_temp_f ?? (newVitals.skin_temp_c ? Number((newVitals.skin_temp_c * 1.8 + 32.0).toFixed(1)) : 97.7);
+    const tempC = newVitals.skin_temp_c ?? Number(((tempF - 32.0) * 5.0 / 9.0).toFixed(1));
+    const processedVitals = { ...newVitals, skin_temp_f: tempF, skin_temp_c: tempC };
     const currentBuffer = Array.isArray(get().vitalsBuffer) ? get().vitalsBuffer : [];
-    const updatedBuffer = [...currentBuffer, newVitals].slice(-60); // keep last 60 points
+    const updatedBuffer = [...currentBuffer, processedVitals].slice(-60); // keep last 60 points
     set({
-      vitals: { ...get().vitals, ...newVitals },
+      vitals: { ...get().vitals, ...processedVitals },
       vitalsBuffer: updatedBuffer,
     });
   },

@@ -470,7 +470,7 @@ export default function ChatCompanion() {
           </div>
           <div className="flex justify-between p-2 rounded bg-white/5">
             <span className="text-[#6B7688]">TEMP</span>
-            <span className="text-[#FFA94D] font-bold">{(vitals?.skin_temp_c || 36.5).toFixed(1)}°C</span>
+            <span className="text-[#FFA94D] font-bold">{(vitals?.skin_temp_f || (vitals?.skin_temp_c ? vitals.skin_temp_c * 1.8 + 32.0 : 97.7)).toFixed(1)}°F</span>
           </div>
           <div className="flex justify-between p-2 rounded bg-white/5">
             <span className="text-[#6B7688]">ACTIVITY</span>

@@ -113,7 +113,8 @@ int activeDSPin = DS18B20_PIN;
 // Filtered Vitals Cache
 float currentHR = 72.0;
 float currentSpO2 = 98.4;
-float currentSkinTemp = 36.5;
+float currentSkinTempF = 97.7;
+float currentSkinTempC = 36.5;
 float currentAccelMag = 0.04;
 float accelX = 0.0;
 float accelY = 0.0;
@@ -128,11 +129,20 @@ String alertSource = "LOCAL";
 
 // Haptic Vibration State Machine (Non-blocking pulses)
 bool hapticActive = false;
+bool hapticInverted = false;
 int hapticPulseCount = 0;
 unsigned long hapticStateChangeMs = 0;
 bool hapticMotorState = false;
 unsigned long lastHapticTriggerMs = 0;
 const unsigned long HAPTIC_DEBOUNCE_MS = 30000;
+
+void setHapticPin(bool active) {
+  if (hapticInverted) {
+    digitalWrite(HAPTIC_PIN, active ? LOW : HIGH);
+  } else {
+    digitalWrite(HAPTIC_PIN, active ? HIGH : LOW);
+  }
+}
 
 // Button Debounce & Long-Press Timer for Hardware Reset
 unsigned long bootButtonDownMs = 0;
@@ -197,14 +207,14 @@ void setup() {
   pinMode(BOOT_BUTTON_PIN, INPUT_PULLUP);
   pinMode(MAX30102_INT_PIN, INPUT_PULLUP);
 
-  digitalWrite(HAPTIC_PIN, LOW);
+  setHapticPin(false);
   digitalWrite(LED_RED_ANOMALY, LOW);
   digitalWrite(LED_GREEN_NOMINAL, HIGH);
 
   // 2. Hardware Confidence Chirp (50ms tap)
-  digitalWrite(HAPTIC_PIN, HIGH);
+  setHapticPin(true);
   delay(50);
-  digitalWrite(HAPTIC_PIN, LOW);
+  setHapticPin(false);
 
   // 3. Load Persistent Wi-Fi and Endpoint Configuration from NVS
   loadNVSConfiguration();
@@ -243,8 +253,15 @@ void loop() {
       eraseNVSConfiguration();
       enterAPMode();
     } else if (cmd.equalsIgnoreCase("STATUS")) {
-      Serial.printf("[STATUS] State: %d | SSID: %s | IP: %s | RSSI: %d dBm | FreeHeap: %u\n",
-                    currentState, WiFi.SSID().c_str(), WiFi.localIP().toString().c_str(), WiFi.RSSI(), ESP.getFreeHeap());
+      Serial.printf("[STATUS] State: %d | SSID: %s | IP: %s | RSSI: %d dBm | Temp: %.1f F (%.1f C) | FreeHeap: %u\n",
+                    currentState, WiFi.SSID().c_str(), WiFi.localIP().toString().c_str(), WiFi.RSSI(), currentSkinTempF, currentSkinTempC, ESP.getFreeHeap());
+    } else if (cmd.equalsIgnoreCase("INVERT_HAPTIC")) {
+      hapticInverted = !hapticInverted;
+      setHapticPin(false);
+      Serial.printf("[CMD] Haptic inverted state is now: %s\n", hapticInverted ? "ACTIVE-LOW" : "ACTIVE-HIGH");
+    } else if (cmd.equalsIgnoreCase("TEST_HAPTIC")) {
+      Serial.println("[CMD] Testing haptic motor alarm...");
+      triggerHapticAlarm(3);
     }
   }
 
@@ -372,16 +389,18 @@ void sampleSensors(unsigned long now) {
     currentSpO2 = 98.4 + 0.3 * sin(tSec * 0.2);
   }
 
-  // C. DS18B20 High-Precision Digital Skin Temperature
+  // C. DS18B20 High-Precision Digital Skin Temperature (Fahrenheit & Celsius)
   if (hasDS18B20) {
     ds18b20.requestTemperatures();
     float tempC = ds18b20.getTempCByIndex(0);
-    if (!isnan(tempC) && tempC > 20.0 && tempC < 50.0 && tempC != 85.0 && tempC != -127.0) {
-      currentSkinTemp = tempC;
+    if (!isnan(tempC) && tempC > 15.0 && tempC < 65.0 && tempC != 85.0 && tempC != -127.0) {
+      currentSkinTempC = tempC;
+      currentSkinTempF = tempC * 1.8 + 32.0;
     }
   } else {
     float tSec = now / 1000.0;
-    currentSkinTemp = 36.52 + 0.08 * sin(tSec * 0.15);
+    currentSkinTempC = 36.52 + 0.08 * sin(tSec * 0.15);
+    currentSkinTempF = currentSkinTempC * 1.8 + 32.0;
   }
 }
 
@@ -486,12 +505,13 @@ void checkLocalThresholds() {
   } else if (currentSpO2 < 90.0) {
     isAnomaly = true;
     alertRule = "SPO2 LOW (<90%)";
-  } else if (currentSkinTemp < 35.0) {
+  } else if (currentSkinTempF >= 89.6 && currentSkinTempF < 95.0) {
+    // Only flag hypothermia if sensor is attached to skin (89.6 F to 95.0 F)
     isAnomaly = true;
-    alertRule = "TEMP LOW (<35C)";
-  } else if (currentSkinTemp > 39.0) {
+    alertRule = "TEMP LOW (<95F)";
+  } else if (currentSkinTempF > 102.2) {
     isAnomaly = true;
-    alertRule = "TEMP HIGH (>39C)";
+    alertRule = "FEVER HIGH (>102F)";
   } else if (currentAccelMag > 4.0) {
     isAnomaly = true;
     alertRule = "HIGH-G IMPACT";
@@ -504,12 +524,17 @@ void checkLocalThresholds() {
 
     unsigned long now = millis();
     if (now - lastHapticTriggerMs >= HAPTIC_DEBOUNCE_MS) {
-      triggerHapticAlarm(5);
+      triggerHapticAlarm(3);
       lastHapticTriggerMs = now;
     }
-  } else if (currentState == STATE_ONLINE) {
-    digitalWrite(LED_RED_ANOMALY, LOW);
-    digitalWrite(LED_GREEN_NOMINAL, HIGH);
+  } else {
+    if (!hapticActive) {
+      setHapticPin(false);
+    }
+    if (currentState == STATE_ONLINE) {
+      digitalWrite(LED_RED_ANOMALY, LOW);
+      digitalWrite(LED_GREEN_NOMINAL, HIGH);
+    }
   }
 }
 
@@ -517,27 +542,31 @@ void triggerHapticAlarm(int pulses) {
   hapticActive = true;
   hapticPulseCount = 0;
   hapticMotorState = true;
-  digitalWrite(HAPTIC_PIN, HIGH);
+  setHapticPin(true);
   hapticStateChangeMs = millis();
 }
 
 void updateHapticStateMachine(unsigned long now) {
-  if (!hapticActive) return;
+  if (!hapticActive) {
+    setHapticPin(false);
+    return;
+  }
 
-  // 200ms ON / 200ms OFF tactile pulse sequence
+  // 150ms ON / 150ms OFF tactile pulse sequence
   if (hapticMotorState) {
-    if (now - hapticStateChangeMs >= 200) {
-      digitalWrite(HAPTIC_PIN, LOW);
+    if (now - hapticStateChangeMs >= 150) {
+      setHapticPin(false);
       hapticMotorState = false;
       hapticStateChangeMs = now;
       hapticPulseCount++;
-      if (hapticPulseCount >= 5) {
+      if (hapticPulseCount >= 3) {
         hapticActive = false;
+        setHapticPin(false);
       }
     }
   } else {
-    if (now - hapticStateChangeMs >= 200) {
-      digitalWrite(HAPTIC_PIN, HIGH);
+    if (now - hapticStateChangeMs >= 150) {
+      setHapticPin(true);
       hapticMotorState = true;
       hapticStateChangeMs = now;
     }
@@ -579,7 +608,7 @@ void renderDisplay() {
   display.setCursor(0, 14);
   display.printf("HR:   %3.0f BPM\n", currentHR);
   display.printf("SpO2: %3.1f %%\n", currentSpO2);
-  display.printf("TEMP: %3.1f C\n", currentSkinTemp);
+  display.printf("TEMP: %3.1f F\n", currentSkinTempF);
   display.printf("ACC:  %3.2f g (%s)\n", currentAccelMag, hasMPU ? "MPU" : "SIM");
   display.printf("WIFI: %s (%d)\n", (WiFi.status() == WL_CONNECTED) ? wifiSSID.c_str() : "OFFLINE", WiFi.RSSI());
 
@@ -597,7 +626,7 @@ void transmitTelemetry() {
       offlineBuffer[bufferHead].timestamp_ms = millis();
       offlineBuffer[bufferHead].hr = currentHR;
       offlineBuffer[bufferHead].spo2 = currentSpO2;
-      offlineBuffer[bufferHead].temp = currentSkinTemp;
+      offlineBuffer[bufferHead].temp = currentSkinTempF;
       offlineBuffer[bufferHead].accel_x = accelX;
       offlineBuffer[bufferHead].accel_y = accelY;
       offlineBuffer[bufferHead].accel_z = accelZ;
@@ -641,7 +670,8 @@ void transmitTelemetry() {
   r["timestamp_utc"] = timeBuffer;
   r["heart_rate_bpm"] = currentHR;
   r["spo2_pct"] = currentSpO2;
-  r["skin_temp_c"] = currentSkinTemp;
+  r["skin_temp_f"] = round(currentSkinTempF * 10.0) / 10.0;
+  r["skin_temp_c"] = round(currentSkinTempC * 10.0) / 10.0;
   r["accel_x_g"] = accelX;
   r["accel_y_g"] = accelY;
   r["accel_z_g"] = accelZ;

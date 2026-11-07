@@ -142,7 +142,7 @@ export default function Dashboard() {
   const safeBuffer = Array.isArray(vitalsBuffer) ? vitalsBuffer : [];
   const hrSparkline = safeBuffer.map((d) => d.heart_rate_bpm || 72);
   const spo2Sparkline = safeBuffer.map((d) => d.spo2_pct || 98);
-  const tempSparkline = safeBuffer.map((d) => d.skin_temp_c || 36.5);
+  const tempSparkline = safeBuffer.map((d) => d.skin_temp_f || (d.skin_temp_c ? Number((d.skin_temp_c * 1.8 + 32.0).toFixed(1)) : 97.7));
   const radSparkline = safeBuffer.map(
     (d) => (d.radiation_dose_uSv_cumulative || 12500) / 1000
   );
@@ -250,8 +250,8 @@ export default function Dashboard() {
 
         <VitalsTile
           label="SKIN TEMPERATURE"
-          value={(vitals?.skin_temp_c || 36.5).toFixed(1)}
-          unit="°C"
+          value={(vitals?.skin_temp_f || (vitals?.skin_temp_c ? vitals.skin_temp_c * 1.8 + 32.0 : 97.7)).toFixed(1)}
+          unit="°F"
           delta={vitals?.skin_temp_delta ?? 0.1}
           status="nominal"
           color="#FFA94D"
@@ -275,7 +275,7 @@ export default function Dashboard() {
       <TelemetryWave
         hr={vitals?.heart_rate_bpm || 72}
         spo2={vitals?.spo2_pct || 98}
-        temp={vitals?.skin_temp_c || 36.5}
+        temp={vitals?.skin_temp_f || (vitals?.skin_temp_c ? vitals.skin_temp_c * 1.8 + 32.0 : 97.7)}
         motion={vitals?.accel_magnitude_g || 0.28}
         anomaly={vitals?.anomaly_detected || false}
         windowDuration="5min"

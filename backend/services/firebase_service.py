@@ -129,12 +129,20 @@ def sync_reading_to_firestore(astronaut_id: str, reading: Dict[str, Any]) -> boo
             "wifi_rssi": reading.get("wifi_rssi", -50),
         }, merge=True)
 
+        temp_c = reading.get("skin_temp_c")
+        temp_f = reading.get("skin_temp_f")
+        if temp_f is None and temp_c is not None:
+            temp_f = round(temp_c * 1.8 + 32.0, 2)
+        elif temp_c is None and temp_f is not None:
+            temp_c = round((temp_f - 32.0) * 5.0 / 9.0, 2)
+
         # Add reading to subcollection
         device_ref.collection("readings").add({
             "timestamp": timestamp_str,
             "heart_rate_bpm": reading.get("heart_rate_bpm"),
             "spo2_pct": reading.get("spo2_pct"),
-            "skin_temp_c": reading.get("skin_temp_c"),
+            "skin_temp_f": temp_f,
+            "skin_temp_c": temp_c,
             "accel_x_g": reading.get("accel_x_g", 0.0),
             "accel_y_g": reading.get("accel_y_g", 0.0),
             "accel_z_g": reading.get("accel_z_g", 0.98),

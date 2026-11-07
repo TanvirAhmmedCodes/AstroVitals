@@ -219,7 +219,7 @@ export default function TelemetryWave({
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#FFA94D]" />
             <span className="text-[#6B7688]">Temp</span>
-            <span className="text-[#FFA94D] font-tabular font-bold">{temp.toFixed(1)}°C</span>
+            <span className="text-[#FFA94D] font-tabular font-bold">{(temp > 60 ? temp : (temp * 1.8 + 32.0)).toFixed(1)}°F</span>
           </div>
 
           <div className="flex items-center gap-1.5">
