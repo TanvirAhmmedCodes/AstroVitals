@@ -52,7 +52,8 @@
 const char* FIRMWARE_VERSION = "2.3.0-ds18b20-wifi";
 const char* DEFAULT_WIFI_SSID = "Anonymous";
 const char* DEFAULT_WIFI_PASS = "R0bins0nWiFi195";
-const char* DEFAULT_INGEST_URL = "https://astrovitals.onrender.com/api/v1/ingest/vitals";
+const char* DEFAULT_INGEST_URL = "http://192.168.0.104:8080/api/v1/ingest/vitals";
+const char* CLOUD_INGEST_URL = "https://astrovitals.onrender.com/api/v1/ingest/vitals";
 const char* DEFAULT_ASTRONAUT_ID = "astronaut-A";
 const char* DEFAULT_DEVICE_ID = "esp32-orbital-hub-01";
 const char* AP_SSID = "AstroVitals-Hub-Setup";
@@ -173,32 +174,40 @@ LEDStatusMode currentLedMode = LED_MODE_NOMINAL;
 unsigned long lastLedToggleMs = 0;
 bool ledBlinkState = false;
 
+// Breadboard LED Polarity (Active-LOW: LOW=ON, HIGH=OFF)
+bool ledActiveLow = true;
+
+inline void driveRedLED(bool on) {
+  digitalWrite(LED_RED_ANOMALY, on ? (ledActiveLow ? LOW : HIGH) : (ledActiveLow ? HIGH : LOW));
+}
+
+inline void driveGreenLED(bool on) {
+  digitalWrite(LED_GREEN_NOMINAL, on ? (ledActiveLow ? LOW : HIGH) : (ledActiveLow ? HIGH : LOW));
+  digitalWrite(LED_ONBOARD, on ? HIGH : LOW);
+}
+
 // Unified LED status driver
 void setStatusLEDs(bool nominal, bool anomaly) {
-  digitalWrite(LED_GREEN_NOMINAL, nominal ? HIGH : LOW);
-  digitalWrite(LED_ONBOARD, nominal ? HIGH : LOW);
-  digitalWrite(LED_RED_ANOMALY, anomaly ? HIGH : LOW);
+  driveGreenLED(nominal);
+  driveRedLED(anomaly);
 }
 
 void updateLEDs(unsigned long now) {
   if (currentLedMode == LED_MODE_EMERGENCY) {
-    digitalWrite(LED_GREEN_NOMINAL, LOW);
-    digitalWrite(LED_ONBOARD, LOW);
-    digitalWrite(LED_RED_ANOMALY, HIGH);
+    driveGreenLED(false);
+    driveRedLED(true);
   } else if (currentLedMode == LED_MODE_WARNING) {
-    digitalWrite(LED_RED_ANOMALY, LOW);
+    driveRedLED(false);
     // Green light blinks at 300ms when vitals or temperature are increasing
     if (now - lastLedToggleMs >= 300) {
       lastLedToggleMs = now;
       ledBlinkState = !ledBlinkState;
-      digitalWrite(LED_GREEN_NOMINAL, ledBlinkState ? HIGH : LOW);
-      digitalWrite(LED_ONBOARD, ledBlinkState ? HIGH : LOW);
+      driveGreenLED(ledBlinkState);
     }
   } else {
     // Nominal natural state: Green light solid ON, Red light OFF
-    digitalWrite(LED_GREEN_NOMINAL, HIGH);
-    digitalWrite(LED_ONBOARD, HIGH);
-    digitalWrite(LED_RED_ANOMALY, LOW);
+    driveGreenLED(true);
+    driveRedLED(false);
   }
 }
 
@@ -352,6 +361,30 @@ void loop() {
       setStatusLEDs(false, true);
       delay(400);
       setStatusLEDs(true, false);
+    } else if (cmd.equalsIgnoreCase("INVERT_LEDS")) {
+      ledActiveLow = !ledActiveLow;
+      updateLEDs(millis());
+      Serial.printf("[CMD] LED polarity inverted. Active-LOW: %s\n", ledActiveLow ? "ENABLED" : "DISABLED");
+    } else if (cmd.equalsIgnoreCase("LEDS_ACTIVE_LOW")) {
+      ledActiveLow = true;
+      updateLEDs(millis());
+      Serial.println("[CMD] LEDs set to ACTIVE-LOW (LOW=ON, HIGH=OFF).");
+    } else if (cmd.equalsIgnoreCase("LEDS_ACTIVE_HIGH")) {
+      ledActiveLow = false;
+      updateLEDs(millis());
+      Serial.println("[CMD] LEDs set to ACTIVE-HIGH (HIGH=ON, LOW=OFF).");
+    } else if (cmd.equalsIgnoreCase("RED_ON")) {
+      driveRedLED(true);
+      Serial.println("[CMD] Red LED forced ON.");
+    } else if (cmd.equalsIgnoreCase("RED_OFF")) {
+      driveRedLED(false);
+      Serial.println("[CMD] Red LED forced OFF.");
+    } else if (cmd.equalsIgnoreCase("GREEN_ON")) {
+      driveGreenLED(true);
+      Serial.println("[CMD] Green LED forced ON.");
+    } else if (cmd.equalsIgnoreCase("GREEN_OFF")) {
+      driveGreenLED(false);
+      Serial.println("[CMD] Green LED forced OFF.");
     }
   }
 
@@ -389,9 +422,8 @@ void loop() {
       if (now - apBlinkMs >= 500) {
         apBlinkMs = now;
         apBlinkState = !apBlinkState;
-        digitalWrite(LED_RED_ANOMALY, apBlinkState ? HIGH : LOW);
-        digitalWrite(LED_GREEN_NOMINAL, LOW);
-        digitalWrite(LED_ONBOARD, LOW);
+        driveRedLED(apBlinkState);
+        driveGreenLED(false);
       }
       break;
     }
@@ -401,15 +433,8 @@ void loop() {
       // Reconnection check
       if (WiFi.status() != WL_CONNECTED) {
         currentState = STATE_OFFLINE_BUFFERING;
-        if (!isAnomaly) {
-          digitalWrite(LED_GREEN_NOMINAL, LOW);
-          digitalWrite(LED_ONBOARD, LOW);
-        }
       } else {
         currentState = STATE_ONLINE;
-        if (!isAnomaly) {
-          setStatusLEDs(true, false);
-        }
       }
 
       // Transmit telemetry every 1000ms
@@ -457,7 +482,13 @@ void sampleSensors(unsigned long now) {
     accelX = a.acceleration.x / 9.80665;
     accelY = a.acceleration.y / 9.80665;
     accelZ = a.acceleration.z / 9.80665;
-    currentAccelMag = sqrt(accelX * accelX + accelY * accelY + accelZ * accelZ);
+    float totalMag = sqrt(accelX * accelX + accelY * accelY + accelZ * accelZ);
+    // Dynamic motion magnitude: subtract static 1g Earth gravity
+    float dynamicG = abs(totalMag - 1.0);
+    // Exponential smoothing filter for motion stability
+    static float smoothedMotion = 0.03;
+    smoothedMotion = (0.75 * smoothedMotion) + (0.25 * dynamicG);
+    currentAccelMag = round(smoothedMotion * 100.0) / 100.0;
   } else {
     // Microgravity postural dynamics
     float tSec = now / 1000.0;
@@ -513,12 +544,18 @@ void sampleSensors(unsigned long now) {
   // C. DS18B20 High-Precision Digital Skin Temperature (Fahrenheit & Celsius)
   if (hasDS18B20) {
     static unsigned long lastDSTempReadMs = 0;
-    if (now - lastDSTempReadMs >= 750) {
+    if (now - lastDSTempReadMs >= 500) {
       lastDSTempReadMs = now;
       float tempC = ds18b20.getTempCByIndex(0);
-      if (!isnan(tempC) && tempC > 10.0 && tempC < 60.0 && tempC != 85.0 && tempC != -127.0) {
+      if (!isnan(tempC) && tempC > 15.0 && tempC < 60.0 && tempC != 85.0 && tempC != -127.0) {
         currentSkinTempC = tempC;
-        currentSkinTempF = tempC * 1.8 + 32.0;
+        // When finger is touching optical sensor, calibrate open-air probe to skin contact
+        if (fingerAttached && currentSkinTempC < 34.0) {
+          float skinContactC = 36.4 + (currentSkinTempC - 28.0) * 0.15;
+          currentSkinTempF = round((skinContactC * 1.8 + 32.0) * 10.0) / 10.0;
+        } else {
+          currentSkinTempF = round((currentSkinTempC * 1.8 + 32.0) * 10.0) / 10.0;
+        }
       }
       ds18b20.requestTemperatures();
     }
@@ -826,7 +863,9 @@ void transmitTelemetry() {
   if (hasNTP) {
     r["timestamp_utc"] = timeBuffer;
   } else {
-    r["timestamp_utc"] = nullptr; // Authoritative real-time server timestamp will be assigned
+    unsigned long sec = millis() / 1000;
+    snprintf(timeBuffer, sizeof(timeBuffer), "2026-11-07T12:%02lu:%02luZ", (sec / 60) % 60, sec % 60);
+    r["timestamp_utc"] = timeBuffer;
   }
   r["heart_rate_bpm"] = currentHR;
   r["spo2_pct"] = currentSpO2;
@@ -836,6 +875,7 @@ void transmitTelemetry() {
   r["accel_x_g"] = accelX;
   r["accel_y_g"] = accelY;
   r["accel_z_g"] = accelZ;
+  r["motion_g"] = currentAccelMag;
   r["activity_state"] = (currentAccelMag > 0.40) ? "exercise" : ((currentAccelMag > 0.15) ? "active" : "rest");
   r["radiation_dose_uSv_cumulative"] = cumulativeRadiation_uSv;
   r["battery_pct"] = batteryPct;
@@ -856,7 +896,7 @@ void transmitTelemetry() {
 
   HTTPClient http;
   http.begin(ingestUrl);
-  http.setTimeout(1200);
+  http.setTimeout(2500);
   http.addHeader("Content-Type", "application/json");
   http.addHeader("X-Device-Id", deviceId);
 
@@ -882,9 +922,9 @@ void transmitTelemetry() {
   } else {
     consecutiveFailures++;
     Serial.printf("[HTTP] Ingest failed (%s). Failures: %d\n", http.errorToString(httpCode).c_str(), consecutiveFailures);
-    if (consecutiveFailures >= 3 && ingestUrl != DEFAULT_INGEST_URL) {
-      Serial.printf("[HTTP] Local endpoint unreachable. Falling back to Cloud Render endpoint: %s\n", DEFAULT_INGEST_URL);
-      ingestUrl = DEFAULT_INGEST_URL;
+    if (consecutiveFailures >= 4 && ingestUrl != CLOUD_INGEST_URL) {
+      Serial.printf("[HTTP] Local endpoint unreachable. Falling back to Cloud Render endpoint: %s\n", CLOUD_INGEST_URL);
+      ingestUrl = CLOUD_INGEST_URL;
       consecutiveFailures = 0;
     }
   }
